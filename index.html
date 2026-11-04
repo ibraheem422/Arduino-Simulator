@@ -1,115 +1,149 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><title>Arduino Mega Simulator</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arduino Mega Simulator</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-body{overflow:hidden;background:#f1f5f9;color:#0f172a;height:100vh;display:flex;flex-direction:column}
-#tb{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid #e2e8f0;flex-shrink:0}
-#tb h1{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;margin-right:8px}
-.btn{padding:5px 12px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:4px}
-.btn:hover{background:#f8fafc}.btn-run{background:#059669;color:#fff;border-color:#059669}.btn-run:hover{background:#047857}
-.btn-stop{background:#dc2626;color:#fff;border-color:#dc2626}
-.sep{width:1px;height:24px;background:#e2e8f0}
-#wcs{display:flex;gap:4px;align-items:center;margin-left:auto}
-#wcs span{font-size:11px;color:#64748b}
-.wc{width:18px;height:18px;border-radius:50%;border:2px solid #fff;cursor:pointer;box-shadow:0 0 0 1px #cbd5e1;transition:transform .1s}
-.wc.sel{box-shadow:0 0 0 2px #0f172a;transform:scale(1.1)}
-#main{flex:1;display:flex;overflow:hidden}
-#lp{width:38%;display:flex;flex-direction:column;border-right:2px solid #cbd5e1}
-#lph{padding:4px 10px;background:#0d1117;color:#94a3b8;font-size:11px;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between}
-#ew{flex:1;position:relative;background:#0d1117;overflow:hidden;display:flex}
-#gt{padding:8px 6px;text-align:right;color:#484f58;font-size:13px;font-family:monospace;line-height:20px;user-select:none;min-width:48px;overflow:hidden}
-#hl{position:absolute;left:54px;top:0;right:0;bottom:0;overflow:auto;padding:8px;font-family:monospace;font-size:13px;line-height:20px;white-space:pre;pointer-events:none;color:#c9d1d9}
-#ce{position:absolute;left:54px;top:0;right:0;bottom:0;width:calc(100% - 54px);background:transparent;border:none;outline:none;resize:none;font-family:monospace;font-size:13px;line-height:20px;color:transparent;caret-color:#58a6ff;padding:8px;white-space:pre}
-.tok-kw{color:#ff7b72}.tok-fn{color:#d2a8ff}.tok-const{color:#79c0ff}.tok-num{color:#f0883e}.tok-str{color:#a5d6ff}.tok-com{color:#8b949e;font-style:italic}.tok-pre{color:#f0883e;font-style:italic}
-#rp{flex:1;display:flex;flex-direction:column}
-#bbh{padding:4px 10px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:11px;color:#64748b;display:flex;justify-content:space-between}
-#bb{flex:1;position:relative;overflow:auto;background:#fff;background-image:radial-gradient(circle,#cbd5e1 1px,transparent 1px);background-size:24px 24px}
-#sp{height:28%;border-top:2px solid #cbd5e1;display:flex;flex-direction:column;background:#0d1117}
-#sph{padding:4px 10px;color:#94a3b8;font-size:11px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1e293b}
-#ser{flex:1;overflow-y:auto;padding:6px;font-family:monospace;font-size:12px;line-height:16px;color:#34d399;white-space:pre-wrap}
-#ab{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;background:#059669;color:#fff;border:none;font-size:24px;cursor:pointer;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:background .15s}
-#ab:hover{background:#047857}
-#pal{position:absolute;top:64px;right:12px;width:260px;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:20;overflow:hidden}
-#pal .h{padding:8px 12px;background:#f8fafc;font-size:12px;font-weight:600;border-bottom:1px solid #e2e8f0}
-#pal .i{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;width:100%;text-align:left;border:none;background:none;border-bottom:1px solid #f1f5f9;font-size:13px}
-#pal .i:hover{background:#f8fafc}
-#pal .i .ic{width:32px;height:32px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:16px}
-#pal .i .nm{font-size:13px;font-weight:500}#pal .i .ds{font-size:11px;color:#64748b}
-#tip{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.9);padding:6px 10px;border-radius:6px;font-size:11px;color:#475569;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-#tfto{position:absolute;z-index:5}
-#tfto canvas{display:block;width:100%;height:100%;image-rendering:pixelated;cursor:crosshair}
-#exdd{position:absolute;top:100%;left:0;margin-top:4px;width:280px;background:#fff;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:50;overflow:hidden;max-height:300px;overflow-y:auto}
-#exdd .eh{padding:6px 12px;background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;border-bottom:1px solid #e2e8f0}
-#exdd .ei{display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:none;border-bottom:1px solid #f1f5f9;cursor:pointer}
-#exdd .ei:hover{background:#f8fafc}
-#exdd .ei .t{font-size:13px;font-weight:500}#exdd .ei .d{font-size:11px;color:#64748b}
-.rel{position:relative}
-</style></head><body>
-<div id="tb"><h1>⚡ Arduino Mega Simulator</h1><div class="sep"></div>
-<button class="btn btn-run" id="rbtn">▶ Run</button><button class="btn" id="rsbtn">↻ Reset</button>
-<div class="sep"></div><button class="btn" id="svbtn">💾 Save</button><button class="btn" id="ldbtn">📂 Load</button>
-<input type="file" id="fi" accept=".json" style="display:none"><div class="sep"></div>
-<div class="rel"><button class="btn" id="exbtn">📋 Examples ▾</button><div id="exdd" style="display:none"></div></div>
-<div id="wcs"><span>Wire:</span></div></div>
-<div id="main"><div id="lp"><div id="lph"><span>sketch.ino</span><span>Arduino C++</span></div>
-<div id="ew"><div id="gt"></div><pre id="hl"></pre><textarea id="ce" spellcheck="false" autocomplete="off"></textarea></div></div>
-<div id="rp"><div id="bbh"><span>Breadboard</span><span>Drag parts · Click pins to wire · Click TFT to touch</span></div>
-<div id="bb"><div id="tip"><b>Tip:</b> Click a pin to start a wire, then click another pin. Drag parts by body. Press <kbd>Del</kbd> to remove.</div>
-<button id="ab">+</button><div id="pal" style="display:none"></div>
-<svg id="svg" width="2400" height="1800"></svg>
-<div id="tfto" style="display:none"><canvas></canvas></div></div>
-<div id="sp"><div id="sph"><span>SERIAL MONITOR</span><span style="font-size:10px">9600 baud</span></div>
-<div id="ser"></div></div></div></div>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#eef2f7;color:#0f172a;display:flex;flex-direction:column;overflow:hidden}
+#tb{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid #dbe2ea;flex-wrap:wrap}
+#tb h1{font-size:15px;font-weight:700;margin-right:6px}
+.btn{padding:6px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;font-size:13px}
+.btn:hover{background:#f1f5f9}
+.run{background:#059669;color:#fff;border-color:#059669}.run:hover{background:#047857}
+.stop{background:#dc2626;color:#fff;border-color:#dc2626}
+.sep{width:1px;height:24px;background:#dbe2ea}
+.menu{position:relative}
+.pop{position:absolute;top:calc(100% + 6px);left:0;width:310px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:100;display:none;max-height:70vh;overflow:auto}
+.pop.open{display:block}
+.pop .ph{padding:8px 12px;font-size:12px;font-weight:700;color:#475569;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.pop button{display:block;width:100%;text-align:left;padding:9px 12px;border:0;border-bottom:1px solid #f1f5f9;background:#fff;cursor:pointer}
+.pop button:hover{background:#f8fafc}
+.pop .t{font-size:13px;font-weight:600}.pop .d{font-size:12px;color:#64748b;margin-top:2px}
+#main{flex:1;display:flex;min-height:0}
+#left{flex:0 0 46%;min-width:440px;display:flex;flex-direction:column;border-right:2px solid #cbd5e1;background:#0d1117}
+#lh{padding:6px 12px;font-size:12px;color:#94a3b8;display:flex;justify-content:space-between;border-bottom:1px solid #1e293b}
+#ed{flex:1;position:relative;display:flex;min-height:0;overflow:hidden}
+#gut{width:50px;padding:10px 8px 10px 0;text-align:right;color:#484f58;font:14px/21px Consolas,Menlo,monospace;user-select:none;overflow:hidden;white-space:pre}
+#cw{position:relative;flex:1;overflow:hidden}
+#hl,#code{position:absolute;inset:0;margin:0;padding:10px;font:14px/21px Consolas,Menlo,monospace;white-space:pre;tab-size:2;border:0;outline:0;overflow:auto}
+#hl{color:#c9d1d9;pointer-events:none;overflow:hidden}
+#code{background:transparent;color:transparent;caret-color:#58a6ff;resize:none}
+.kw{color:#ff7b72}.ty{color:#79c0ff}.fn{color:#d2a8ff}.cn{color:#ffa657}.nm{color:#f0883e}.st{color:#a5d6ff}.cm{color:#8b949e;font-style:italic}.pp{color:#f0883e}
+#right{flex:1;display:flex;flex-direction:column;min-width:0}
+#bbh{padding:6px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b;display:flex;justify-content:space-between}
+#bb{flex:1;position:relative;overflow:auto;background:#fff;background-image:radial-gradient(#cbd5e1 1px,transparent 1px);background-size:20px 20px}
+#stage{position:relative;width:1400px;height:1000px}
+#stage svg{position:absolute;left:0;top:0}
+#tftc{position:absolute;z-index:3;background:#000;border-radius:2px;cursor:crosshair;display:none;touch-action:none}
+#tftm{position:absolute;z-index:4;display:none;background:#111;color:#fca5a5;font:12px monospace;padding:8px;text-align:center;align-items:center;justify-content:center}
+#sp{height:200px;display:flex;flex-direction:column;background:#0d1117;border-top:2px solid #cbd5e1}
+#sph{padding:6px 12px;color:#94a3b8;font-size:12px;display:flex;justify-content:space-between;border-bottom:1px solid #1e293b}
+#ser{flex:1;overflow:auto;padding:8px;font:13px/18px Consolas,Menlo,monospace;color:#34d399;white-space:pre-wrap}
+.tip{position:absolute;left:10px;top:10px;font-size:12px;color:#475569;background:rgba(255,255,255,.92);padding:6px 10px;border-radius:6px;z-index:5;pointer-events:none}
+.sw{width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #cbd5e1;cursor:pointer;display:inline-block;margin-left:4px}
+.sw.on{box-shadow:0 0 0 2px #0f172a}
+</style>
+</head>
+<body>
+<div id="tb">
+  <h1>Arduino Mega Simulator</h1>
+  <button class="btn run" id="run">Run</button>
+  <button class="btn" id="reset">Reset</button>
+  <div class="sep"></div>
+  <div class="menu">
+    <button class="btn" id="exBtn">Examples</button>
+    <div class="pop" id="exPop"><div class="ph">Load an example</div><div id="exList"></div></div>
+  </div>
+  <div class="menu">
+    <button class="btn" id="addBtn">+ Add part</button>
+    <div class="pop" id="addPop"><div class="ph">Add a part to the breadboard</div><div id="addList"></div></div>
+  </div>
+  <button class="btn" id="del">Delete selected</button>
+  <div class="sep"></div>
+  <button class="btn" id="save">Save</button>
+  <button class="btn" id="load">Load</button>
+  <input type="file" id="file" accept=".json" hidden>
+  <div class="sep"></div>
+  <span style="font-size:12px;color:#64748b">Wire colour:</span><span id="swatches"></span>
+</div>
+<div id="main">
+  <div id="left">
+    <div id="lh"><span>sketch.ino</span><span>Arduino C++</span></div>
+    <div id="ed">
+      <div id="gut"></div>
+      <div id="cw"><pre id="hl"></pre><textarea id="code" spellcheck="false" wrap="off"></textarea></div>
+    </div>
+  </div>
+  <div id="right">
+    <div id="bbh"><span>Breadboard</span><span>Drag a part by its body. Click a pin, then another pin, to wire. Click the TFT screen to touch it.</span></div>
+    <div id="bb">
+      <div class="tip">Delete or Backspace removes the selected part or wire. Esc cancels a wire.</div>
+      <div id="stage">
+        <svg id="svg" width="1400" height="1000"></svg>
+        <canvas id="tftc" width="240" height="320"></canvas>
+        <div id="tftm"></div>
+      </div>
+    </div>
+    <div id="sp"><div id="sph"><span>SERIAL MONITOR</span><span>9600 baud</span></div><div id="ser"></div></div>
+  </div>
+</div>
+
 <script>
-var FONT=[0,0,0,0,0,0,0,95,0,0,0,7,0,7,0,20,127,20,127,20,36,42,127,42,18,35,19,8,100,98,54,73,85,34,80,0,5,3,0,0,0,28,34,65,0,0,65,34,28,0,20,8,62,8,20,8,8,62,8,8,0,80,48,0,0,8,8,8,8,8,0,96,96,0,0,32,16,8,4,2,62,81,73,69,62,0,66,127,64,0,66,97,81,73,70,33,65,69,75,49,24,20,18,127,16,39,69,69,69,57,60,74,73,73,48,1,113,9,5,3,54,73,73,73,54,6,73,73,41,30,0,54,54,0,0,0,86,54,0,0,0,8,20,34,65,20,20,20,20,20,65,34,20,8,0,2,1,81,9,6,50,73,121,65,62,126,17,17,17,126,127,73,73,73,54,62,65,65,65,34,127,65,65,34,28,127,73,73,73,65,127,9,9,1,1,62,65,65,81,50,127,8,8,8,127,0,65,127,65,0,32,64,65,63,1,127,8,20,34,65,127,64,64,64,64,127,2,4,2,127,127,4,8,16,127,62,65,65,65,62,127,9,9,9,6,62,65,81,33,94,127,9,25,41,70,70,73,73,73,49,1,1,127,1,1,63,64,64,64,63,31,32,64,32,31,127,32,24,32,127,99,20,8,20,99,3,4,120,4,3,97,81,73,69,67,0,127,65,65,0,2,4,8,16,32,0,65,65,127,0,4,2,1,2,4,64,64,64,64,64,0,1,2,4,0,32,84,84,84,120,127,72,68,68,56,56,68,68,68,32,56,68,68,72,127,56,84,84,84,24,8,126,9,1,2,8,20,84,84,60,127,8,4,4,120,0,68,125,64,0,32,64,68,61,0,0,127,16,40,68,0,65,127,64,0,124,4,24,4,120,124,8,4,4,120,56,68,68,68,56,124,20,20,20,8,8,20,20,24,124,124,8,4,4,8,72,84,84,36,0,4,63,68,64,32,60,64,64,32,124,28,32,64,32,28,60,64,48,64,60,68,40,16,40,68,12,80,80,80,60,68,100,84,76,68,0,8,54,65,0,0,0,127,0,0,0,65,54,8,0,2,1,2,4,2];
-var DC=`// Arduino Mega simulator — drive a servo from the joystick.
-// Wire up: joystick VRx → A0, VRy → A1, SW → D2, GND → GND, 5V → 5V
-//          servo SIG → D5, GND → GND, 5V → 5V
-//          LED anode → D13, cathode → GND
-//
-// Drag the joystick knob to drive the servo. Press Run ▶ to start.
+// ============================================================
+// PART DEFINITIONS
+// ============================================================
+const $ = id => document.getElementById(id);
+const svg = $('svg'), tftc = $('tftc'), tftm = $('tftm'), TG = tftc.getContext('2d');
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const WIRE_COLORS = ['#ef4444', '#22c55e', '#eab308', '#3b82f6', '#f97316', '#a855f7', '#e5e7eb', '#111827'];
+let wireColor = WIRE_COLORS[0];
+const LEDC = { red: ['#ff4d4d', '#4a1111'], yellow: ['#ffe14d', '#4a4010'], green: ['#4dff88', '#0f3d22'] };
 
-#include <Servo.h>
+const DEFS = {
+  am: { name: 'Arduino Mega 2560', w: 800, h: 280 },
+  led: { name: 'LED', w: 48, h: 96, pins: [
+    { id: 'a', label: '+', x: 12, y: 96, s: 'b' }, { id: 'k', label: '-', x: 36, y: 96, s: 'b' }] },
+  jy: { name: 'Analog joystick', w: 130, h: 150, pins: [
+    { id: 'gnd', label: 'GND', x: 15, y: 150, s: 'b' }, { id: 'vcc', label: '+5V', x: 40, y: 150, s: 'b' },
+    { id: 'vrx', label: 'VRx', x: 65, y: 150, s: 'b' }, { id: 'vry', label: 'VRy', x: 90, y: 150, s: 'b' },
+    { id: 'sw', label: 'SW', x: 115, y: 150, s: 'b' }] },
+  sv: { name: 'Servo (SG90)', w: 110, h: 80, pins: [
+    { id: 'gnd', label: 'GND', x: 20, y: 80, s: 'b' }, { id: 'vcc', label: '5V', x: 55, y: 80, s: 'b' },
+    { id: 'sig', label: 'SIG', x: 90, y: 80, s: 'b' }] },
+  tft: { name: 'ST7789 TFT + touch', w: 220, h: 290, pins: [
+    { id: 'tcs', label: 'T_CS', x: 20, y: 0, s: 't' }, { id: 'tclk', label: 'T_CLK', x: 55, y: 0, s: 't' },
+    { id: 'tdin', label: 'T_DIN', x: 90, y: 0, s: 't' }, { id: 'tdo', label: 'T_DO', x: 125, y: 0, s: 't' },
+    { id: 'tirq', label: 'T_IRQ', x: 160, y: 0, s: 't' },
+    { id: 'gnd', label: 'GND', x: 14, y: 290, s: 'b' }, { id: 'vcc', label: 'VCC', x: 41, y: 290, s: 'b' },
+    { id: 'bl', label: 'BL', x: 68, y: 290, s: 'b' }, { id: 'cs', label: 'CS', x: 95, y: 290, s: 'b' },
+    { id: 'dc', label: 'DC', x: 122, y: 290, s: 'b' }, { id: 'rst', label: 'RST', x: 149, y: 290, s: 'b' },
+    { id: 'mosi', label: 'MOSI', x: 176, y: 290, s: 't' }, { id: 'sck', label: 'SCK', x: 203, y: 290, s: 'b' }] }
+};
+DEFS.am.pins = (() => {
+  const p = [];
+  for (let i = 0; i <= 25; i++) p.push({ id: 'd' + i, label: '' + i, x: 30 + i * 27, y: 0, s: 't' });
+  for (let i = 26; i <= 53; i++) p.push({ id: 'd' + i, label: '' + i, x: 30 + (i - 26) * 27, y: 280, s: 'b' });
+  for (let i = 0; i < 16; i++) p.push({ id: 'a' + i, label: 'A' + i, x: 800, y: 20 + i * 16, s: 'r' });
+  [['gnd1', 'GND', 40], ['gnd2', 'GND', 80], ['5v', '5V', 120], ['3v3', '3V3', 160], ['gnd3', 'GND', 200], ['vin', 'VIN', 240]]
+    .forEach(([id, label, y]) => p.push({ id, label, x: 0, y, s: 'l' }));
+  return p;
+})();
+DEFS.tft.pins = DEFS.tft.pins.map(p => (p.id === 'mosi' ? Object.assign({}, p, { s: 'b' }) : p));
 
-Servo myservo;
-
-const int ledPin   = 13;
-const int servoPin = 5;
-const int joyXPin  = A0;
-const int joyYPin  = A1;
-const int joySwPin = 2;
-
-void setup() {
-  Serial.begin(9600);
-  pinMode(ledPin, OUTPUT);
-  pinMode(joySwPin, INPUT_PULLUP);
-  myservo.attach(servoPin);
-  Serial.println("Ready. Drag the joystick!");
-}
-
-void loop() {
-  int x  = analogRead(joyXPin);
-  int y  = analogRead(joyYPin);
-  int sw = digitalRead(joySwPin);
-
-  int angle = map(x, 0, 1023, 0, 180);
-  myservo.write(angle);
-
-  digitalWrite(ledPin, sw == LOW ? HIGH : LOW);
-
-  Serial.print("x=");   Serial.print(x);
-  Serial.print(" y=");   Serial.print(y);
-  Serial.print(" sw=");  Serial.print(sw);
-  Serial.print(" servo="); Serial.println(angle);
-
-  delay(120);
-}`;
-var BC=`// Blink the onboard LED (D13).
+// ============================================================
+// EXAMPLES
+// ============================================================
+const EX01 = `// 01 - Blink
+// The onboard LED and the external red LED are both on D13.
 void setup() {
   Serial.begin(9600);
   pinMode(13, OUTPUT);
-  Serial.println("Blink starting...");
+  Serial.println("Blink started");
 }
+
 void loop() {
   digitalWrite(13, HIGH);
   Serial.println("LED ON");
@@ -118,181 +152,1576 @@ void loop() {
   Serial.println("LED OFF");
   delay(500);
 }`;
-var TC=`// Drive the ST7789 TFT display.
-// Wiring: 5V -> 5V, GND -> GND
-//         DC -> D9, CS -> D10, RST -> D8, MOSI -> D51
 
-#include <Adafruit_GFX.h>
-#include <Adafruit_ST7789.h>
+const EX02 = `// 02 - Joystick + Servo + LED
+// Joystick VRx on A0 steers the servo. Pressing the joystick (SW on D2) lights the LED.
+#include <Servo.h>
 
-#define TFT_CS    10
-#define TFT_DC     9
-#define TFT_RST    8
-
-Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
-
-int frame = 0;
+Servo myservo;
+const int joyX = A0;
+const int joySw = 2;
+const int servoPin = 5;
+const int ledPin = 7;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("TFT init...");
-  tft.init(240, 320);
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setCursor(40, 100);
-  tft.setTextColor(ST77XX_GREEN);
-  tft.setTextSize(3);
-  tft.print("Hello, Mega!");
-  tft.setCursor(40, 140);
-  tft.setTextColor(ST77XX_CYAN);
-  tft.setTextSize(2);
-  tft.print("ST7789 240x320");
-  delay(1500);
+  pinMode(joySw, INPUT_PULLUP);
+  pinMode(ledPin, OUTPUT);
+  myservo.attach(servoPin);
+  Serial.println("Joystick + servo ready");
 }
 
 void loop() {
-  tft.fillScreen(ST77XX_BLACK);
-  int cx = 120 + (int)(80.0 * sin(frame * 0.05));
-  int cy = 160 + (int)(100.0 * cos(frame * 0.07));
-  tft.fillCircle(cx, cy, 18, ST77XX_MAGENTA);
-  tft.drawCircle(cx, cy, 22, ST77XX_WHITE);
-  tft.setCursor(8, 4);
-  tft.setTextColor(ST77XX_YELLOW);
-  tft.setTextSize(2);
-  tft.print("f=");
-  tft.print(frame);
-  frame++;
-  delay(40);
+  int x = analogRead(joyX);
+  int angle = map(x, 0, 1023, 0, 180);
+  myservo.write(angle);
+
+  bool pressed = digitalRead(joySw) == LOW;
+  digitalWrite(ledPin, pressed ? HIGH : LOW);
+
+  Serial.print("x=");
+  Serial.print(x);
+  Serial.print(" angle=");
+  Serial.print(angle);
+  Serial.print(" pressed=");
+  Serial.println(pressed);
+  delay(100);
 }`;
-var PARTS={};
-function buildParts(){
-PARTS={
-'am':{n:'Arduino Mega 2560',w:760,h:240,p:(function(){var p=[];for(var i=0;i<=25;i++)p.push({id:'d'+i,l:String(i),x:180+i*22,y:0,s:'t'});for(var i=26;i<=53;i++)p.push({id:'d'+i,l:String(i),x:180+(i-26)*22,y:240,s:'b'});for(var i=0;i<=15;i++)p.push({id:'a'+i,l:'A'+i,x:760,y:40+i*12,s:'r'});[['aref','AREF',40],['gnd1','GND',60],['gnd2','GND',80],['vin','VIN',100],['gnd3','GND',120],['rsv','—',140],['rst1','RST',160],['3v3','3V3',180],['5v','5V',200],['gnd4','GND',220]].forEach(function(v){p.push({id:v[0],l:v[1],x:0,y:v[2],s:'l'})});return p})()},
-'lr':{n:'Red LED',w:60,h:90,p:[{id:'a',l:'+',x:20,y:90,s:'b'},{id:'k',l:'-',x:40,y:90,s:'b'}]},
-'lg':{n:'Green LED',w:60,h:90,p:[{id:'a',l:'+',x:20,y:90,s:'b'},{id:'k',l:'-',x:40,y:90,s:'b'}]},
-'ly':{n:'Yellow LED',w:60,h:90,p:[{id:'a',l:'+',x:20,y:90,s:'b'},{id:'k',l:'-',x:40,y:90,s:'b'}]},
-'jy':{n:'Analog Joystick',w:130,h:130,p:[{id:'gnd',l:'GND',x:15,y:130,s:'b'},{id:'vcc',l:'5V',x:40,y:130,s:'b'},{id:'vrx',l:'VRx',x:65,y:130,s:'b'},{id:'vry',l:'VRy',x:90,y:130,s:'b'},{id:'sw',l:'SW',x:115,y:130,s:'b'}]},
-'sv':{n:'Servo Motor',w:110,h:80,p:[{id:'gnd',l:'GND',x:20,y:80,s:'b'},{id:'vcc',l:'5V',x:50,y:80,s:'b'},{id:'sig',l:'SIG',x:80,y:80,s:'b'}]},
-'tft':{n:'ST7789 TFT Touch',w:220,h:260,p:[{id:'gnd',l:'GND',x:15,y:260,s:'b'},{id:'vcc',l:'5V',x:42,y:260,s:'b'},{id:'dc',l:'DC',x:69,y:260,s:'b'},{id:'cs',l:'CS',x:96,y:260,s:'b'},{id:'rst',l:'RST',x:123,y:260,s:'b'},{id:'bl',l:'BL',x:150,y:260,s:'b'},{id:'mosi',l:'MOSI',x:177,y:260,s:'b'},{id:'miso',l:'MISO',x:205,y:260,s:'b'},{id:'t_cs',l:'T_CS',x:20,y:0,s:'t'},{id:'t_clk',l:'T_CLK',x:55,y:0,s:'t'},{id:'t_din',l:'T_DIN',x:90,y:0,s:'t'},{id:'t_do',l:'T_DO',x:125,y:0,s:'t'},{id:'t_irq',l:'T_IRQ',x:160,y:0,s:'t'}]},
-'bz':{n:'Piezo Buzzer',w:70,h:80,p:[{id:'pos',l:'+',x:22,y:80,s:'b'},{id:'neg',l:'-',x:48,y:80,s:'b'}]}
-};
+
+const EX03 = `// 03 - ST7789 TFT demo: text, shapes and a bouncing ball
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7789.h>
+
+#define TFT_CS  10
+#define TFT_DC   9
+#define TFT_RST  8
+
+Adafruit_ST7789 tft(TFT_CS, TFT_DC, TFT_RST);
+
+int bx = 60, by = 90, dx = 3, dy = 2;
+
+void setup() {
+  tft.init(240, 320);
+  tft.fillScreen(ST77XX_BLACK);
+  tft.setTextColor(ST77XX_GREEN);
+  tft.setTextSize(2);
+  tft.setCursor(20, 10);
+  tft.print("Hello ST7789");
+  tft.drawRect(10, 40, 220, 200, ST77XX_BLUE);
+  tft.fillRect(20, 260, 60, 30, ST77XX_RED);
+  tft.fillCircle(170, 275, 15, ST77XX_YELLOW);
+  tft.drawLine(10, 240, 230, 240, ST77XX_CYAN);
 }
-buildParts();
-var PAL=['lr','lg','ly','jy','sv','tft','bz'];
-var WC=['#ef4444','#22c55e','#eab308','#3b82f6','#f97316','#a855f7','#000000','#ffffff'];
-var S={parts:[],wires:[],code:DC,running:false,serial:[],pv:{},tbuf:new Uint16Array(240*320),tW:240,tH:320,wc:'#ef4444',pend:null,selP:null,selW:null,idc:1};
-var rt={touched:false,tx:0,ty:0,csLow:false,prevClk:1,bitCount:0,cmd:0,resp:0,respReady:false};
-var startTime=Date.now(),aborted=false,prog=null,globals={},funcs={};
-function nid(p){return p+'-'+(S.idc++)}
-function findConn(pin){var am=S.parts.find(function(p){return p.type==='am'});if(!am)return null;var apid=pin>=54&&pin<=69?'a'+(pin-54):pin>=0&&pin<=53?'d'+pin:null;if(!apid)return null;for(var i=0;i<S.wires.length;i++){var w=S.wires[i];if(w.fp===am.id&&w.fpi===apid)return{pid:w.tp,pi:w.tpi};if(w.tp===am.id&&w.tpi===apid)return{pid:w.fp,pi:w.fpi}}return null}
-function dW(pin,val){val=val?1:0;var c=findConn(pin);if(!c)return;if(touchW(c.pid,c.pi,val))return;S.pv[c.pid+':'+c.pi]={m:'o',l:val}}
-function dR(pin){var c=findConn(pin);if(!c)return 1;var tr=touchR(c.pid,c.pi);if(tr!==undefined)return tr;var pv=S.pv[c.pid+':'+c.pi];return pv?pv.l?1:0:1}
-function aW(pin,val){var c=findConn(pin);if(!c)return;S.pv[c.pid+':'+c.pi]={m:'p',l:val}}
-function aR(pin){var c=findConn(pin);if(!c)return 0;var pv=S.pv[c.pid+':'+c.pi];return pv?pv.l||0:0}
-function touchW(pid,pi,val){var p=S.parts.find(function(x){return x.id===pid});if(!p||p.type!=='tft')return false;if(['t_cs','t_clk','t_din','t_do','t_irq'].indexOf(pi)<0)return false;var v=val?1:0,ts=rt;if(pi==='t_cs'){if(v===0&&!ts.csLow){ts.csLow=true;ts.bitCount=0;ts.cmd=0;ts.respReady=false}else if(v===1)ts.csLow=false;return true}if(pi==='t_clk'){if(v===1&&ts.prevClk===0){if(ts.csLow){if(ts.bitCount<8){var dv=S.pv[pid+':t_din']?S.pv[pid+':t_din'].l:0;ts.cmd=(ts.cmd<<1)|(dv?1:0);ts.bitCount++;if(ts.bitCount===8){ts.resp=calcTouch(ts.cmd);ts.respReady=true}}else ts.bitCount++}}ts.prevClk=v;return true}if(pi==='t_din'){S.pv[pid+':'+pi]={m:'o',l:v};return true}return false}
-function touchR(pid,pi){var p=S.parts.find(function(x){return x.id===pid});if(!p||p.type!=='tft')return undefined;if(['t_cs','t_clk','t_din','t_do','t_irq'].indexOf(pi)<0)return undefined;var ts=rt;if(pi==='t_irq')return ts.touched?0:1;if(pi==='t_do'){if(!ts.csLow||!ts.respReady)return 0;var di=ts.bitCount>=8?ts.bitCount-8:0;if(di<12)return(ts.resp>>(11-di))&1;return 0}return undefined}
-function calcTouch(cmd){var ch=(cmd>>4)&7;if(!rt.touched)return 0;var sx=rt.tx,sy=rt.ty;if(ch===5)return Math.round((40+sx*200/239)*8);if(ch===1)return Math.round((246-sy*255/319)*8);return 0}
-function setTouch(x,y){rt.touched=true;rt.tx=Math.max(0,Math.min(239,Math.floor(x)));rt.ty=Math.max(0,Math.min(319,Math.floor(y)))}
-function clearTouch(){rt.touched=false}
-function appendSerial(t){var last=S.serial[S.serial.length-1];if(last&&last.text[last.text.length-1]!=='\n'){last.text+=t}else{S.serial.push({id:S.idc++,text:t});if(S.serial.length>500)S.serial.shift()}renderSerial()}
-function ST7789(){this.w=240;this.h=320;this.buf=new Uint16Array(this.w*this.h);this.cx=0;this.cy=0;this.tc=0xffff;this.ts=1;this.tw=true;
-this.init=function(w,h){if(w)this.w=w;if(h)this.h=h;this.buf=new Uint16Array(this.w*this.h);this.buf.fill(0);S.tbuf=this.buf;S.tW=this.w;S.tH=this.h;renderTft()};
-this.fillScreen=function(c){this.buf.fill(c&0xffff);S.tbuf=this.buf;renderTft()};
-this.drawPixel=function(x,y,c){x=Math.floor(x);y=Math.floor(y);if(x<0||y<0||x>=this.w||y>=this.h)return;this.buf[y*this.w+x]=c&0xffff;S.tbuf=this.buf};
-this.fillRect=function(x,y,w,h,c){x=Math.floor(x);y=Math.floor(y);w=Math.floor(w);h=Math.floor(h);var x1=Math.max(0,x),y1=Math.max(0,y),x2=Math.min(this.w,x+w),y2=Math.min(this.h,y+h);var cc=c&0xffff;for(var yy=y1;yy<y2;yy++){var off=yy*this.w;for(var xx=x1;xx<x2;xx++)this.buf[off+xx]=cc}S.tbuf=this.buf;renderTft()};
-this.drawRect=function(x,y,w,h,c){this.fillRect(x,y,w,1,c);this.fillRect(x,y+h-1,w,1,c);this.fillRect(x,y,1,h,c);this.fillRect(x+w-1,y,1,h,c)};
-this.drawFastHLine=function(x,y,w,c){this.fillRect(x,y,w,1,c)};
-this.drawFastVLine=function(x,y,h,c){this.fillRect(x,y,1,h,c)};
-this.drawLine=function(x0,y0,x1,y1,c){x0=Math.floor(x0);y0=Math.floor(y0);x1=Math.floor(x1);y1=Math.floor(y1);var dx=Math.abs(x1-x0),sx=x0<x1?1:-1,dy=-Math.abs(y1-y0),sy=y0<y1?1:-1,err=dx+dy;while(true){this.drawPixel(x0,y0,c);if(x0===x1&&y0===y1)break;var e2=2*err;if(e2>=dy){err+=dy;x0+=sx}if(e2<=dx){err+=dx;y0+=sy}}};
-this.drawCircle=function(x0,y0,r,c){if(r<=0)return;var f=1-r,ddx=1,ddy=-2*r,x=0,y=r;this.drawPixel(x0,y0+r,c);this.drawPixel(x0,y0-r,c);this.drawPixel(x0+r,y0,c);this.drawPixel(x0-r,y0,c);while(x<y){if(f>=0){y--;ddy+=2;f+=ddy}x++;ddx+=2;f+=ddx;this.drawPixel(x0+x,y0+y,c);this.drawPixel(x0-x,y0+y,c);this.drawPixel(x0+x,y0-y,c);this.drawPixel(x0-x,y0-y,c);this.drawPixel(x0+y,y0+x,c);this.drawPixel(x0-y,y0+x,c);this.drawPixel(x0+y,y0-x,c);this.drawPixel(x0-y,y0-x,c)}};
-this.fillCircle=function(x0,y0,r,c){this.drawFastVLine(x0,y0-r,2*r+1,c);var f=1-r,ddx=1,ddy=-2*r,x=0,y=r;while(x<y){if(f>=0){y--;ddy+=2;f+=ddy}x++;ddx+=2;f+=ddx;this.drawFastVLine(x0+x,y0-y,2*y+1,c);this.drawFastVLine(x0-x,y0-y,2*y+1,c);this.drawFastVLine(x0+y,y0-x,2*x+1,c);this.drawFastVLine(x0-y,y0-x,2*x+1,c)}};
-this.setCursor=function(x,y){this.cx=x|0;this.cy=y|0};
-this.setTextColor=function(c){this.tc=c&0xffff};
-this.setTextSize=function(s){this.ts=Math.max(1,s|0)};
-this.print=function(v){var s=fmtVal(v);for(var i=0;i<s.length;i++){var ch=s.charCodeAt(i);if(ch===10){this.cx=0;this.cy+=8*this.ts;continue}if(ch===13)continue;var fi=(ch-32)*5;for(var ci=0;ci<5;ci++){var line=FONT[fi+ci]||0;for(var cj=0;cj<8;cj++){if(line&(1<<(7-cj))){if(this.ts===1)this.drawPixel(this.cx+ci,this.cy+cj,this.tc);else this.fillRect(this.cx+ci*this.ts,this.cy+cj*this.ts,this.ts,this.ts,this.tc)}}}}this.cx+=6*this.ts;if(this.tw&&this.cx>this.w-6*this.ts){this.cx=0;this.cy+=8*this.ts}};
-this.println=function(v){if(v!==undefined)this.print(fmtVal(v));this.print('\n')};
-this.setRotation=function(){};
-this.width=function(){return this.w};this.height=function(){return this.h}}
-function fmtVal(v,fmt){if(v===null||v===undefined)return'';if(typeof v==='string')return v;if(typeof v==='boolean')return v?'1':'0';if(typeof v==='number'){if(fmt===2)return(Math.floor(v)>>>0).toString(2);if(fmt===8)return(Math.floor(v)>>>0).toString(8);if(fmt===16)return(Math.floor(v)>>>0).toString(16).toUpperCase();return String(Math.floor(v))}return String(v)}
-function Servo(){this.pin=null;this.angle=0;this.att=false;this.attach=function(p){this.pin=p;this.att=true;return 1};this.write=function(a){if(!this.att||this.pin==null)return;this.angle=Math.max(0,Math.min(180,a|0));var c=findConn(this.pin);if(c)S.pv[c.pid+':'+c.pi]={m:'p',l:this.angle};renderParts()};this.read=function(){return this.angle};this.attached=function(){return this.att};this.detach=function(){this.att=false;this.pin=null}}
-var Serial={begin:function(){},end:function(){},available:function(){return 0},read:function(){return-1},peek:function(){return-1},flush:function(){},print:function(v,f){appendSerial(fmtVal(v,f))},println:function(v,f){if(v===undefined)appendSerial('\n');else appendSerial(fmtVal(v,f)+'\n')},write:function(v){if(typeof v==='number')appendSerial(String.fromCharCode(v&0xff));else appendSerial(String(v))}};
-var EEPROM={data:new Array(4096).fill(0),read:function(a){return this.data[a&0xfff]||0},write:function(a,v){this.data[a&0xfff]=v&0xff},update:function(a,v){if((this.data[a&0xfff]||0)!==(v&0xff))this.data[a&0xfff]=v&0xff},length:4096};
-var Wire={addr:0,wbuf:[],rbuf:[],regPtr:0,begin:function(){},end:function(){},beginTransmission:function(a){this.addr=a;this.wbuf=[]},endTransmission:function(){return 0},write:function(v){if(typeof v==='number')this.wbuf.push(v&0xff);else if(typeof v==='string')for(var i=0;i<v.length;i++)this.wbuf.push(v.charCodeAt(i));if(this.addr===0x68&&this.wbuf.length===1)this.regPtr=this.wbuf[0];return 1},requestFrom:function(a,c){if(a===0x68){var now=new Date();var bcd=function(n){return((Math.floor(n/10)<<4)|(n%10))};var regs=[bcd(now.getSeconds()),bcd(now.getMinutes()),bcd(now.getHours()),1,bcd(now.getDate()),bcd(now.getMonth()+1),bcd(now.getFullYear()-2000),0,0,0,0x80,0];this.rbuf=regs.slice(this.regPtr,this.regPtr+c);return this.rbuf.length}this.rbuf=new Array(c).fill(0);return c},available:function(){return this.rbuf.length},read:function(){return this.rbuf.shift()||0},setClock:function(){}};
-var SPI={begin:function(){},end:function(){},beginTransaction:function(){},endTransaction:function(){},transfer:function(v){return v},SPI_MODE0:0,MSBFIRST:1,LSBFIRST:0};
-function initG(){globals={HIGH:1,LOW:0,INPUT:0,OUTPUT:1,INPUT_PULLUP:2,LED_BUILTIN:13,true:1,false:0,PI:3.141592653589793,Serial:Serial,SPI:SPI,Wire:Wire,EEPROM:EEPROM,ST77XX_BLACK:0,ST77XX_WHITE:65535,ST77XX_RED:63488,ST77XX_GREEN:2016,ST77XX_BLUE:31,ST77XX_CYAN:2047,ST77XX_MAGENTA:64543,ST77XX_YELLOW:65504,ST77XX_ORANGE:64799,BLACK:0,WHITE:65535,RED:63488,GREEN:2016,BLUE:31,CYAN:2047,MAGENTA:64543,YELLOW:65504,ORANGE:64799,
-pinMode:function(p,m){var c=findConn(p);if(c){var mn=m===2?'pu':m===1?'o':'i';var ex=S.pv[c.pid+':'+c.pi];var lv=ex?ex.l:0;if(mn==='pu'&&!ex)lv=1;S.pv[c.pid+':'+c.pi]={m:mn,l:lv}}renderParts()},
-digitalWrite:dW,digitalRead:dR,analogWrite:aW,analogRead:aR,
-delay:function(ms){return new Promise(function(res){var c=Math.min(ms,5000);var t=setTimeout(res,c);var ci=setInterval(function(){if(aborted){clearTimeout(t);clearInterval(ci);res()}},80);setTimeout(function(){clearInterval(ci)},c+50)})},
-delayMicroseconds:function(){},millis:function(){return Date.now()-startTime},micros:function(){return(Date.now()-startTime)*1000},
-map:function(x,a,b,c,d){if(b===a)return c;return Math.floor((x-a)*(d-c)/(b-a)+c)},
-constrain:function(x,a,b){return Math.max(a,Math.min(b,x))},min:Math.min,max:Math.max,abs:Math.abs,
-sin:Math.sin,cos:Math.cos,tan:Math.tan,atan2:Math.atan2,atan:Math.atan,asin:Math.asin,acos:Math.acos,sqrt:Math.sqrt,pow:Math.pow,
-sq:function(x){return x*x},radians:function(d){return d*Math.PI/180},degrees:function(r){return r*180/Math.PI},
-random:function(){if(arguments.length===0)return Math.random();if(arguments.length===1)return Math.floor(Math.random()*arguments[0]);return Math.floor(Math.random()*(arguments[1]-arguments[0]))+arguments[0]},
-randomSeed:function(){},tone:function(){},noTone:function(){},bitRead:function(x,b){return(x>>b)&1},bitSet:function(x,b){return x|(1<<b)},bitClear:function(x,b){return x&~(1<<b)},highByte:function(x){return(x>>8)&0xff},lowByte:function(x){return x&0xff},
-Servo:function(){return new Servo()},Adafruit_ST7789:function(){return new ST7789()},Adafruit_GFX:function(){},F:function(s){return s},SPISettings:function(){return{}},strlen_P:function(s){return typeof s==='string'?s.length:0}}}
-initG();
-var KW=new Set(['int','long','short','byte','char','bool','void','float','double','unsigned','signed','const','static','auto','if','else','while','do','for','return','break','continue','switch','case','default','true','false','new','enum','sizeof','String','uint8_t','uint16_t','uint32_t','int8_t','int16_t','int32_t','word','size_t']);
-var TK=new Set(['int','long','short','byte','char','bool','void','float','double','unsigned','signed','const','static','auto','String','uint8_t','uint16_t','uint32_t','int8_t','int16_t','int32_t','word','size_t']);
-var P2=['++','--','<<','>>','<=','>=','==','!=','&&','||','+=','-=','*=','/=','%=','&=','|=','^=','->','::'];
-var P1=['+','-','*','/','%','=','<','>','!','~','&','|','^','(',')','{','}','[',']',';',',','.','?',':'];
-var BP={'*':12,'/':12,'%':12,'+':11,'-':11,'<<':10,'>>':10,'<':9,'>':9,'<=':9,'>=':9,'==':8,'!=':8,'&':7,'^':6,'|':5,'&&':4,'||':3};
-function tokenize(src){var t=[],i=0,l=1,c=1,defs={},cl=[];function push(tp,v,ln){t.push({type:tp,value:v,line:l,col:c});i+=ln;c+=ln}while(i<src.length){var ch=src[i];if(ch==='/'&&src[i+1]==='/'){while(i<src.length&&src[i]!=='\n')i++;continue}if(ch==='/'&&src[i+1]==='*'){i+=2;while(i<src.length&&!(src[i]==='*'&&src[i+1]==='/')){if(src[i]==='\n')l++;i++}i+=2;continue}if(ch==='#'){var li='';while(i<src.length&&src[i]!=='\n'){li+=src[i];i++}var m=li.match(/^#\s*define\s+(\w+)\s+(.+)$/);if(m)defs[m[1]]=m[2].trim();continue}cl.push(ch);i++}i=0;var tx=cl.join('');function esc(e){return{89:'\n',116:'\t',114:'\r',92:'\\',39:"'",34:'"',48:'\0'}[e.charCodeAt(0)]||e}while(i<tx.length){var ch=tx[i];if(ch==='\n'){l++;c=1;i++;continue}if(ch===' '||ch==='\t'||ch==='\r'){i++;c++;continue}if(/[0-9]/.test(ch)||(ch==='.'&&/[0-9]/.test(tx[i+1]||''))){var num='',f=false;if(ch==='0'&&(tx[i+1]==='x'||tx[i+1]==='X')){num=tx.slice(i,i+2);i+=2;c+=2;while(i<tx.length&&/[0-9a-fA-F]/.test(tx[i])){num+=tx[i];i++;c++}push('int',String(parseInt(num,16)),0);continue}while(i<tx.length&&/[0-9]/.test(tx[i])){num+=tx[i];i++;c++}if(tx[i]==='.'){f=true;num+='.';i++;c++;while(i<tx.length&&/[0-9]/.test(tx[i])){num+=tx[i];i++;c++}}if(tx[i]==='e'||tx[i]==='E'){f=true;num+=tx[i];i++;c++;if(tx[i]==='+'||tx[i]==='-'){num+=tx[i];i++;c++}while(i<tx.length&&/[0-9]/.test(tx[i])){num+=tx[i];i++;c++}}while(i<tx.length&&/[uUlLfF]/.test(tx[i])){if(tx[i]==='f'||tx[i]==='F')f=true;i++;c++}push(f?'float':'int',num,0);continue}if(ch==="'"){i++;c++;var cc=tx[i]==='\\'?esc(tx[i+1]):tx[i];i+=tx[i]==='\\'?2:1;c+=tx[i]==='\\'?2:1;if(tx[i]==="'"){i++;c++}push(cc.length>1?'string':'char',cc,0);continue}if(ch=='"'){i++;c++;var s='';while(i<tx.length&&tx[i]!=='"'){if(tx[i]==='\\'){s+=esc(tx[i+1]);i+=2;c+=2}else{if(tx[i]==='\n')l++;s+=tx[i];i++;c++}}i++;c++;push('string',s,0);continue}if(/[A-Za-z_]/.test(ch)){var id='';while(i<tx.length&&/[A-Za-z0-9_]/.test(tx[i])){id+=tx[i];i++;c++}push(KW.has(id)?'keyword':'ident',id,0);continue}var m=false;for(var p of P2){if(tx.startsWith(p,i)){push('punct',p,p.length);m=true;break}}if(m)continue;for(var p of P1){if(tx.startsWith(p,i)){push('punct',p,p.length);m=true;break}}if(m)continue;i++;c++}t.push({type:'eof',value:'',line:l,col:c});return{toks:t,defs:defs}}
-function TS(toks){this.toks=toks;this.pos=0;this.peek=function(o){return this.toks[Math.min(this.pos+(o||0),this.toks.length-1)]};this.next=function(){return this.toks[this.pos++]};this.eof=function(){return this.peek().type==='eof'};this.eP=function(p){var t=this.peek();if(t.type!=='punct'||t.value!==p)throw'Parse:'+p+'@'+t.line+':'+t.col;return this.next()};this.mP=function(p){var t=this.peek();if(t.type==='punct'&&t.value===p){this.next();return true}return false};this.eK=function(k){var t=this.peek();if(t.type!=='keyword'||t.value!==k)throw'Parse:'+k+'@'+t.line;return this.next()};this.mK=function(k){var t=this.peek();if(t.type==='keyword'&&t.value===k){this.next();return true}return false}}
-var enumC={};
-function parse(src){var r=tokenize(src),toks=r.toks,defs=r.defs;enumC={};var s=new TS(toks),body=[];function rT(){var p=[];while(s.peek().type==='keyword'&&['const','static','unsigned','signed','long','short'].indexOf(s.peek().value)>=0)p.push(s.next().value);if(s.peek().type==='keyword'&&TK.has(s.peek().value)){p.push(s.next().value);while(s.peek().type==='keyword'&&['long','short','int','unsigned','signed'].indexOf(s.peek().value)>=0)p.push(s.next().value);return p.join(' ')}if(s.peek().type==='ident'){p.push(s.next().value);while(s.peek().type==='punct'&&s.peek().value==='::'){s.next();var n=s.peek();if(n.type==='ident'||n.type==='keyword'){p.push('::');p.push(s.next().value)}}return p.join(' ')}return p.length?p.join(' '):null}function pTop(){while(s.mP(';')){}if(s.eof())return null;if(s.peek().type==='keyword'&&s.peek().value==='enum'){s.eK('enum');if(s.peek().type==='ident')s.next();if(s.mP(':'))rT();s.eP('{');var v=0;while(!(s.peek().type==='punct'&&s.peek().value==='}')){var nt=s.peek();if(nt.type!=='ident')throw'enum name';s.next();if(s.mP('='))evalConst(pExpr());enumC[nt.value]=v;v++;if(s.mP(','))continue}s.eP('}');s.mP(';');return null}var ts=rT();if(!ts)throw'top@'+s.peek().line;var nt=s.peek();if(nt.type!=='ident')throw'id@'+nt.line;s.next();if(s.peek().type==='punct'&&s.peek().value==='('){s.eP('(');var ps=[];if(!(s.peek().type==='punct'&&s.peek().value===')')){do{rT();while(s.mP('*')){}var ir=s.mP('&');var pn=s.peek();if(pn.type!=='ident')throw'param@'+pn.line;s.next();ps.push({name:pn.value,isRef:ir})}while(s.mP(','))}s.eP(')');if(s.mP(';'))return{type:'Fn',name:nt.value,params:ps,body:{type:'Blk',body:[]}};s.eP('{');var fb=[];while(!(s.peek().type==='punct'&&s.peek().value==='}')){var st=pStmt();if(st)fb.push(st)}s.eP('}');return{type:'Fn',name:nt.value,params:ps,body:{type:'Blk',body:fb}}}var ds=[];var init=null;if(s.mP('=')){if(s.peek().type==='ident'&&s.peek(1).type==='punct'&&s.peek(1).value==='('){var tn=s.next().value;s.eP('(');var a=[];if(!(s.peek().type==='punct'&&s.peek().value===')')){do{a.push(pExpr())}while(s.mP(','))}s.eP(')');init={type:'New',callee:{type:'Id',name:tn},args:a}}else init=pExpr()}ds.push({name:nt.value,init:init});while(s.mP(',')){var nm2=s.peek();s.next();var i2=null;if(s.mP('='))i2=pExpr();ds.push({name:nm2.value,init:i2})}s.mP(';');return{type:'Var',declType:ts,declarations:ds}}function pStmt(){while(s.mP(';'))return null;var t=s.peek();if(t.type==='punct'&&t.value==='{'){s.eP('{');var b=[];while(!(s.peek().type==='punct'&&s.peek().value==='}')){var st=pStmt();if(st)b.push(st)}s.eP('}');return{type:'Blk',body:b}}if(t.type==='keyword'){if(t.value==='if'){s.eK('if');s.eP('(');var te=pExpr();s.eP(')');var c=pStmt()||{type:'Emp'};var a=null;if(s.mK('else'))a=pStmt()||{type:'Emp'};return{type:'If',test:te,con:c,alt:a}}if(t.value==='while'){s.eK('while');s.eP('(');var wt=pExpr();s.eP(')');return{type:'While',test:wt,body:pStmt()||{type:'Emp'}}}if(t.value==='do'){s.eK('do');var db=pStmt()||{type:'Emp'};s.eK('while');s.eP('(');var dt2=pExpr();s.eP(')');s.mP(';');return{type:'DoWhile',body:db,test:dt2}}if(t.value==='for'){s.eK('for');s.eP('(');var fi=null;if(!(s.peek().type==='punct'&&s.peek().value===';')){if(s.peek().type==='keyword'&&TK.has(s.peek().value)){var ts2=rT();var nm3=s.peek();s.next();var ds3=[];var init3=null;if(s.mP('='))init3=pExpr();ds3.push({name:nm3.value,init:init3});fi={type:'Var',declType:ts2,declarations:ds3}}else fi={type:'ExprStmt',expression:pExpr()}}s.mP(';');var ft=null;if(!(s.peek().type==='punct'&&s.peek().value===';'))ft=pExpr();s.mP(';');var fu=null;if(!(s.peek().type==='punct'&&s.peek().value===')'))fu=pExpr();s.eP(')');return{type:'For',init:fi,test:ft,update:fu,body:pStmt()||{type:'Emp'}}}if(t.value==='return'){s.next();var ra=null;if(!(s.peek().type==='punct'&&s.peek().value===';'))ra=pExpr();s.mP(';');return{type:'Ret',argument:ra}}if(t.value==='break'){s.next();s.mP(';');return{type:'Brk'}}if(t.value==='continue'){s.next();s.mP(';');return{type:'Cont'}}if(TK.has(t.value)){var ts3=rT();var nm4=s.peek();if(nm4.type!=='ident')throw'var@'+nm4.line;s.next();var ds4=[];var init4=null;if(s.mP('='))init4=pExpr();ds4.push({name:nm4.value,init:init4});while(s.mP(',')){var nm5=s.peek();s.next();var i5=null;if(s.mP('='))i5=pExpr();ds4.push({name:nm5.value,init:i5})}s.mP(';');return{type:'Var',declType:ts3,declarations:ds4}}}if(t.type==='ident'&&s.peek(1).type==='ident'){var ts4=rT();var nm6=s.peek();s.next();var ds6=[];var init6=null;if(s.mP('='))init6=pExpr();ds6.push({name:nm6.value,init:init6});s.mP(';');return{type:'Var',declType:ts4,declarations:ds6}}var e=pExpr();s.mP(';');return{type:'ExprStmt',expression:e}}function pExpr(){var l=pCond();var t=s.peek();if(t.type==='punct'&&['=','+=','-=','*=','/=','%=','<<=','>>=','&=','|=','^='].indexOf(t.value)>=0){s.next();return{type:'Asg',op:t.value,target:l,value:pExpr()}}return l}function pCond(){var t=pBin(0);if(s.mP('?')){var c=pExpr();s.eP(':');return{type:'Cond',test:t,con:c,alt:pCond()}}return t}function pBin(mp){var l=pUn();while(true){var t=s.peek();if(t.type!=='punct')break;var op=t.value;var pr=BP[op];if(pr===undefined||pr<=1||pr<mp)break;s.next();l={type:'Bin',op:op,left:l,right:pBin(pr+1)}}return l}function pUn(){var t=s.peek();if(t.type==='punct'){if(['-','+','!','~'].indexOf(t.value)>=0){s.next();return{type:'Un',op:t.value,arg:pUn()}}if(t.value==='++'||t.value==='--'){s.next();return{type:'Upd',op:t.value,arg:pUn(),prefix:true}}}return pPost()}function pPost(){var e=pPrim();while(true){var t=s.peek();if(t.type==='punct'){if(t.value==='.'){s.next();var p=s.peek();s.next();e={type:'Mem',obj:e,prop:p.value}}else if(t.value==='['){s.next();e={type:'Idx',obj:e,idx:pExpr()};s.eP(']')}else if(t.value==='('){s.next();var a=[];if(!(s.peek().type==='punct'&&s.peek().value===')')){do{a.push(pExpr())}while(s.mP(','))}s.eP(')');e={type:'Call',callee:e,args:a}}else if(t.value==='++'||t.value==='--'){s.next();e={type:'Upd',op:t.value,arg:e,prefix:false}}else break}else break}return e}function pPrim(){var t=s.peek();if(t.type==='int'){s.next();return{type:'Lit',value:parseInt(t.value,10)}}if(t.type==='float'){s.next();return{type:'Lit',value:parseFloat(t.value)}}if(t.type==='string'){s.next();return{type:'Lit',value:t.value}}if(t.type==='char'){s.next();return{type:'Lit',value:t.value.charCodeAt(0)}}if(t.type==='keyword'){if(t.value==='true'){s.next();return{type:'Lit',value:1}}if(t.value==='false'){s.next();return{type:'Lit',value:0}}}if(t.type==='ident'){s.next();return{type:'Id',name:t.value}}if(t.type==='punct'&&t.value==='('){var n=s.peek(1),a2=s.peek(2);if(n.type==='keyword'&&TK.has(n.value)&&a2.type==='punct'&&a2.value===')'){s.next();s.next();s.next();return pUn()}s.next();var e=pExpr();s.eP(')');return e}throw'unexpected:'+t.value+'@'+t.line}function evalConst(e){if(e.type==='Lit'&&typeof e.value==='number')return e.value;return 0}while(!s.eof()){var n=pTop();if(n)body.push(n)}Object.assign(defs,enumC);return{type:'Prog',body:body,defs:defs}}
-var BreakS={},ContinueS={},RetS=function(v){this.value=v};
-function Scope(parent){this.vars={};this.parent=parent;this.get=function(n){if(n in this.vars)return this.vars[n];return this.parent?this.parent.get(n):undefined};this.set=function(n,v){var s=this;while(s){if(n in s.vars){s.vars[n]=v;return}s=s.parent}this.vars[n]=v};this.declare=function(n,v){this.vars[n]=v};this.has=function(n){return n in this.vars||(this.parent?this.parent.has(n):false)}}
-var gScope=new Scope(null);
-function applyBin(op,l,r){if(op==='+'&&(typeof l==='string'||typeof r==='string'))return String(l)+String(r);var ln=typeof l==='number'?l:Number(l)||0;var rn=typeof r==='number'?r:Number(r)||0;switch(op){case'+':return ln+rn;case'-':return ln-rn;case'*':return ln*rn;case'/':return rn===0?0:Math.trunc(ln/rn);case'%':return rn===0?0:ln%rn;case'<':return ln<rn?1:0;case'>':return ln>rn?1:0;case'<=':return ln<=rn?1:0;case'>=':return ln>=rn?1:0;case'==':return ln===rn?1:0;case'!=':return ln!==rn?1:0;case'&':return ln&rn;case'|':return ln|rn;case'^':return ln^rn;case'<<':return ln<<rn;case'>>':return ln>>rn;case'&&':return(ln&&rn)?1:0;case'||':return(ln||rn)?1:0}return 0}
-function truthy(v){if(typeof v==='number')return v!==0;if(typeof v==='string')return v.length>0;return Boolean(v)}
-async function evalExpr(e,sc){switch(e.type){case'Lit':return e.value;case'Id':var nm=e.name;if(sc.has(nm))return sc.get(nm);if(funcs[nm]&&!sc.has(nm))return function(){return callFn(funcs[nm],Array.prototype.slice.call(arguments),sc,[])};if(nm in globals)return globals[nm];return 0;case'Un':var v=await evalExpr(e.arg,sc);if(e.op==='-')return-v;if(e.op==='!')return truthy(v)?0:1;if(e.op==='~')return~v;return v;case'Upd':var cur=await evalExpr(e.arg,sc);var nv=e.op==='++'?(cur||0)+1:(cur||0)-1;await assignTo(e.arg,nv,sc);return nv;case'Bin':return applyBin(e.op,await evalExpr(e.left,sc),await evalExpr(e.right,sc));case'Cond':return truthy(await evalExpr(e.test,sc))?await evalExpr(e.con,sc):await evalExpr(e.alt,sc);case'Asg':var rv=await evalExpr(e.value,sc);if(e.op==='='){await assignTo(e.target,rv,sc);return rv}var cur2=await evalExpr(e.target,sc);var nv2=applyBin(e.op[0],cur2,rv);await assignTo(e.target,nv2,sc);return nv2;case'Call':if(e.callee.type==='Id'){var nm=e.callee.name;if(funcs[nm]&&!sc.has(nm)){var args=[];for(var a of e.args)args.push(await evalExpr(a,sc));return await callFn(funcs[nm],args,sc,e.args)}}var callee=await evalExpr(e.callee,sc);if(typeof callee!=='function')return 0;var args=[];for(var a of e.args)args.push(await evalExpr(a,sc));var r=callee.apply(null,args);return r instanceof Promise?await r:r;case'Mem':var obj=await evalExpr(e.obj,sc);if(obj==null)return undefined;var v2=obj[e.prop];return typeof v2==='function'?v2.bind(obj):v2;case'Idx':var obj2=await evalExpr(e.obj,sc);var idx=await evalExpr(e.idx,sc);return obj2?obj2[idx]:undefined;case'New':var fn=await evalExpr(e.callee,sc);var args=[];for(var a of e.args)args.push(await evalExpr(a,sc));if(typeof fn==='function')return fn.apply(null,args);return 0}}
-async function assignTo(t,v,sc){if(t.type==='Id'){sc.set(t.name,v)}else if(t.type==='Idx'){var obj=await evalExpr(t.obj,sc);var idx=await evalExpr(t.idx,sc);if(obj)obj[idx]=v}else if(t.type==='Mem'){var obj=await evalExpr(t.obj,sc);if(obj)obj[t.prop]=v}}
-async function callFn(fn,args,callerSc,callerArgs){var nsc=new Scope(gScope);var refBoxes=[];for(var i=0;i<fn.params.length;i++){var p=fn.params[i];if(p.isRef&&callerArgs&&callerArgs[i]){var box={value:args[i]||0,__rb:true};refBoxes.push({box:box,argExpr:callerArgs[i]});nsc.declare(p.name,box)}else nsc.declare(p.name,args[i]||0)}var ret;try{await execBlk(fn.body,nsc);ret=undefined}catch(e){if(e instanceof RetS)ret=e.value;else throw e}if(callerSc){for(var rb of refBoxes){if(rb.argExpr)await assignTo(rb.argExpr,rb.box.value,callerSc)}}return ret}
-async function execBlk(blk,psc){var sc=new Scope(psc);for(var st of blk.body)await execStmt(st,sc)}
-async function execStmt(n,sc){switch(n.type){case'Blk':return execBlk(n,sc);case'Var':for(var d of n.declarations){var val=d.init?await evalExpr(d.init,sc):0;if(n.declType&&n.declType.includes('Servo'))val=new Servo();else if(n.declType&&(n.declType.includes('Adafruit')||n.declType.includes('ST77')))val=new ST7789();sc.declare(d.name,val)}return;case'ExprStmt':await evalExpr(n.expression,sc);return;case'If':if(truthy(await evalExpr(n.test,sc)))await execStmt(n.con,sc);else if(n.alt)await execStmt(n.alt,sc);return;case'While':var s1=0;while(truthy(await evalExpr(n.test,sc))){if(aborted)throw new RetS(undefined);if(++s1>1000000)throw'LoopGuard';try{await execStmt(n.body,sc)}catch(e){if(e===BreakS)break;if(e===ContinueS)continue;throw e}}return;case'DoWhile':var s3=0;do{if(aborted)throw new RetS(undefined);if(++s3>1000000)throw'LoopGuard';try{await execStmt(n.body,sc)}catch(e){if(e===BreakS)break;if(e===ContinueS)continue;throw e}}while(truthy(await evalExpr(n.test,sc)));return;case'For':var fsc=new Scope(sc);if(n.init)await execStmt(n.init,fsc);var s2=0;while(n.test===null||truthy(await evalExpr(n.test,fsc))){if(aborted)throw new RetS(undefined);if(++s2>1000000)throw'LoopGuard';try{await execStmt(n.body,fsc)}catch(e){if(e===BreakS)break;if(e===ContinueS)continue;throw e}if(n.update)await evalExpr(n.update,fsc)}return;case'Ret':throw new RetS(n.argument?await evalExpr(n.argument,sc):undefined);case'Brk':throw BreakS;case'Cont':throw ContinueS;case'Emp':return}}
-async function compile(p){initG();for(var k in p.defs){var v=p.defs[k];var num=Number(v);if(!isNaN(num)&&v.trim())globals[k]=num}funcs={};for(var n of p.body)if(n.type==='Fn')funcs[n.name]=n;for(var n of p.body)if(n.type==='Var')await execStmt(n,gScope)}
-async function runProg(){if(funcs.setup)await callFn(funcs.setup,[],gScope,[]);while(!aborted){if(funcs.loop)await callFn(funcs.loop,[],gScope,[]);else await globals.delay(50)}}
-function pinPos(part,pin){var def=PARTS[part.type];var cx=def.w/2,cy=def.h/2;var dx=pin.x-cx,dy=pin.y-cy;var r=part.rotation*Math.PI/180;return{x:part.x+cx+Math.cos(r)*dx-Math.sin(r)*dy,y:part.y+cy+Math.sin(r)*dx+Math.cos(r)*dy}}
-function pinColor(pin,pv,pending){if(pending)return'#fbbf24';if(pin.l==='GND')return'#1a1a1a';if(pin.l==='5V')return'#dc2626';if(pin.l==='3V3')return'#dc2626';if(pin.l==='RST')return'#f59e0b';if(pv){if(pv.m==='p'&&pv.l>0)return'#22c55e';if(pv.m==='o'&&pv.l>0)return'#22c55e';if(pv.m==='i'||pv.m==='pu')return'#64748b'}return'#cbd5e1'}
-function renderParts(){var svg=document.getElementById('svg');var g='';for(var w of S.wires){var fp=S.parts.find(function(p){return p.id===w.fp});var tp=S.parts.find(function(p){return p.id===w.tp});if(!fp||!tp)continue;var fdef=PARTS[fp.type],tdef=PARTS[tp.type];var fpin=fdef.p.find(function(p){return p.id===w.fpi}),tpin=tdef.p.find(function(p){return p.id===w.tpi});if(!fpin||!tpin)continue;var a=pinPos(fp,fpin),b=pinPos(tp,tpin);var d=wp(a,b);var sel=S.selW===w.id;g+='<path d="'+d+'" fill="none" stroke="transparent" stroke-width="12" style="cursor:pointer" onpointerdown="event.stopPropagation();selectWire(\''+w.id+'\')" />';g+='<path d="'+d+'" fill="none" stroke="'+w.color+'" stroke-width="'+(sel?5:3)+'" stroke-linecap="round" style="pointer-events:none" />'}if(S.pend){var fp=S.parts.find(function(p){return p.id===S.pend.pid});if(fp){var fdef=PARTS[fp.type];var fpin=fdef.p.find(function(p){return p.id===S.pend.pi});if(fpin){var a=pinPos(fp,fpin);g+='<path d="'+wp(a,{x:window._cx||a.x,y:window._cy||a.y})+'" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="6 4" style="pointer-events:none" />'}}}for(var part of S.parts){var def=PARTS[part.type];var sel=S.selP===part.id;var tf='translate('+part.x+' '+part.y+')';g+='<g transform="'+tf+'">';if(sel)g+='<rect x="-6" y="-6" width="'+(def.w+12)+'" height="'+(def.h+12)+'" rx="8" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 4" style="pointer-events:none"/>';g+='<rect x="0" y="0" width="'+def.w+'" height="'+def.h+'" fill="transparent" style="cursor:move" onpointerdown="event.stopPropagation();startDrag(event,\''+part.id+'\')" />';g+='<g style="pointer-events:none">'+pBody(part)+'</g>';for(var pin of def.p){var pv=S.pv[part.id+':'+pin.id];var isPend=S.pend&&S.pend.pid===part.id&&S.pend.pi===pin.id;var col=pinColor(pin,pv,isPend);var lo=pin.s==='t'?{x:0,y:-10,a:'middle'}:pin.s==='b'?{x:0,y:14,a:'middle'}:pin.s==='l'?{x:-9,y:4,a:'end'}:{x:9,y:4,a:'start'};g+='<g transform="translate('+pin.x+' '+pin.y+')" onpointerdown="event.stopPropagation();pinClick(\''+part.id+'\',\''+pin.id+'\')" style="cursor:crosshair"><circle r="11" fill="transparent"/><circle r="4.2" fill="'+col+'" stroke="#1a1a1a" stroke-width="0.8"/><text x="'+lo.x+'" y="'+lo.y+'" text-anchor="'+lo.a+'" font-size="9" font-family="monospace" fill="#1a1a1a" style="pointer-events:none;user-select:none">'+pin.l+'</text></g>'}g+='</g>'}svg.innerHTML=g;renderTft()}
-function wp(a,b){var dx=b.x-a.x,dy=b.y-a.y,k=Math.min(80,Math.max(20,Math.hypot(dx,dy)*0.4));var c1x,c1y,c2x,c2y;if(Math.abs(dx)>Math.abs(dy)){c1x=a.x+Math.sign(dx)*k;c1y=a.y;c2x=b.x-Math.sign(dx)*k;c2y=b.y}else{c1x=a.x;c1y=a.y+Math.sign(dy)*k;c2x=b.x;c2y=b.y-Math.sign(dy)*k}return'M '+a.x+' '+a.y+' C '+c1x+' '+c1y+', '+c2x+' '+c2y+', '+b.x+' '+b.y}
-function pBody(p){var d=PARTS[p.type];if(p.type==='am')return'<rect width="760" height="240" rx="8" fill="#0a6c8c" stroke="#064a60" stroke-width="2"/><rect x="-12" y="22" width="36" height="40" fill="#9ca3af" stroke="#1a1a1a" rx="2"/><rect x="-6" y="28" width="26" height="28" fill="#1a1a1a"/><rect x="-10" y="75" width="32" height="28" fill="#1a1a1a" rx="2"/><circle cx="6" cy="89" r="5" fill="#0a0a0a"/><rect x="320" y="90" width="120" height="70" fill="#0a0a0a" rx="2"/><text x="380" y="125" text-anchor="middle" font-size="10" fill="#888" font-family="monospace">ATmega2560</text><text x="380" y="32" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">ARDUINO MEGA 2560</text><rect x="150" y="62" width="20" height="20" rx="3" fill="#1a1a1a"/><text x="160" y="96" text-anchor="middle" font-size="8" fill="#fff" font-family="monospace">RESET</text><circle cx="210" cy="42" r="3" fill="#22c55e"/><circle cx="210" cy="58" r="3" fill="#eab308"/><rect x="172" y="-4" width="580" height="8" fill="#d4a017" opacity="0.85"/><rect x="172" y="236" width="624" height="8" fill="#d4a017" opacity="0.85"/><rect x="756" y="36" width="8" height="200" fill="#d4a017" opacity="0.85"/><rect x="-4" y="36" width="8" height="190" fill="#d4a017" opacity="0.85"/>';if(p.type==='tft')return'<rect width="220" height="260" rx="6" fill="#0f172a" stroke="#000" stroke-width="1.5"/><rect x="4" y="4" width="212" height="252" rx="3" fill="#0a0a0a" stroke="#1e293b" stroke-width="0.5"/><rect x="4" y="4" width="212" height="10" fill="#1e293b"/><text x="110" y="12" text-anchor="middle" font-size="6" fill="#64748b" font-family="monospace">XPT2046 TOUCH</text><rect x="15" y="18" width="190" height="227" fill="#000" stroke="#334155"/><text x="110" y="255" text-anchor="middle" font-size="8" fill="#64748b" font-family="monospace">ST7789 240x320</text>';if(p.type==='jy'){var vrx=S.pv[p.id+':vrx']?S.pv[p.id+':vrx'].l:512;var vry=S.pv[p.id+':vry']?S.pv[p.id+':vry'].l:512;var sx=((vrx-512)/512)*25;var sy=-((vry-512)/512)*25;var sw=S.pv[p.id+':sw']?S.pv[p.id+':sw'].l:1;return'<rect width="130" height="130" rx="4" fill="#1f3a8a" stroke="#0c1d4d" stroke-width="1.5"/><rect x="6" y="6" width="118" height="118" rx="2" fill="#1a2f73"/><circle cx="'+(65+sx)+'" cy="'+(65+sy)+'" r="28" fill="#0a0a0a" stroke="#3a3a3a" stroke-width="1.5"/><circle cx="'+(65+sx)+'" cy="'+(65+sy)+'" r="20" fill="'+(sw?'#222':'#dc2626')+'" stroke="#000"/><circle cx="'+(65+sx)+'" cy="'+(65+sy)+'" r="6" fill="#666"/><text x="65" y="14" text-anchor="middle" font-size="9" fill="#fff" font-family="monospace">JOYSTICK</text>'}if(p.type==='sv'){var a=S.pv[p.id+':sig']?S.pv[p.id+':sig'].l:0;return'<rect width="110" height="60" rx="4" fill="#1e3a5f" stroke="#0a1f3a" stroke-width="1.5"/><rect x="4" y="4" width="102" height="52" rx="2" fill="#15294a"/><text x="55" y="32" text-anchor="middle" font-size="10" fill="#cce7f0" font-family="monospace">SG90</text><g transform="translate(55 30) rotate('+(a-90)+')"><circle r="6" fill="#888" stroke="#000" stroke-width="0.8"/><rect x="-2" y="-32" width="4" height="32" fill="#dc2626" stroke="#000" stroke-width="0.5"/></g><text x="55" y="76" text-anchor="middle" font-size="9" fill="#1a1a1a" font-family="monospace">'+Math.round(a)+'°</text>'}if(p.type==='lr'||p.type==='lg'||p.type==='ly'){var v=S.pv[p.id+':a'];var lit=v&&v.l>0;var c={lr:'#ef4444',lg:'#22c55e',ly:'#eab308'}[p.type];var glow={lr:'#fca5a5',lg:'#86efac',ly:'#fde047'}[p.type];return'<rect x="5" y="5" width="50" height="50" rx="6" fill="#1a1a1a" stroke="#000"/><circle cx="30" cy="30" r="20" fill="'+(lit?c:'#2a2a2a')+'" stroke="#000"/>'+(lit?'<circle cx="30" cy="30" r="14" fill="#fff" opacity="0.4"/>':'')+'<rect x="20" y="55" width="3" height="35" fill="#9ca3af"/><rect x="40" y="55" width="3" height="35" fill="#9ca3af"/><text x="22" y="70" font-size="9" fill="#fff" font-family="monospace">+</text><text x="42" y="70" font-size="9" fill="#fff" font-family="monospace">-</text>'}if(p.type==='bz'){var v=S.pv[p.id+':pos'];var active=v&&v.l>0;return'<rect x="5" y="5" width="60" height="55" rx="4" fill="#1a1a1a" stroke="#000"/><circle cx="35" cy="32" r="22" fill="'+(active?'#fbbf24':'#333')+'" stroke="#000"/><circle cx="35" cy="32" r="6" fill="#1a1a1a"/>'+(active?'<path d="M 60 22 Q 66 32 60 42" fill="none" stroke="#fbbf24" stroke-width="1.5"/>':'')+'<rect x="20" y="60" width="3" height="20" fill="#9ca3af"/><rect x="48" y="60" width="3" height="20" fill="#9ca3af"/><text x="22" y="73" font-size="8" fill="#fff" font-family="monospace">+</text><text x="50" y="73" font-size="8" fill="#fff" font-family="monospace">-</text>'}return'<rect width="'+d.w+'" height="'+d.h+'" fill="#ddd"/>'}
-function renderTft(){var tp=S.parts.find(function(p){return p.type==='tft'});var ov=document.getElementById('tfto');if(!tp){ov.style.display='none';return}ov.style.cssText='position:absolute;z-index:5;left:'+(tp.x+15)+'px;top:'+(tp.y+18)+'px;width:190px;height:227px';var c=ov.querySelector('canvas');c.width=S.tW;c.height=S.tH;var ctx=c.getContext('2d');var img=ctx.createImageData(S.tW,S.tH);for(var i=0;i<S.tbuf.length&&i<S.tW*S.tH;i++){var cc=S.tbuf[i]||0;img.data[i*4]=((cc>>11)&31)<<3;img.data[i*4+1]=((cc>>5)&63)<<2;img.data[i*4+2]=(cc&31)<<3;img.data[i*4+3]=255}ctx.putImageData(img,0,0)}
-function renderSerial(){var el=document.getElementById('ser');if(!S.serial.length){el.innerHTML='<span style="color:#64748b;font-style:italic">'+(S.running?'Waiting for output…':'Click ▶ Run to start the simulator.')+'</span>';return}el.innerHTML=S.serial.map(function(l){return l.text}).join('').replace(/\n/g,'<br>')}
-var dragRef=null;function toSvg(e){var svg=document.getElementById('svg');var pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;var ctm=svg.getScreenCTM();if(!ctm)return{x:0,y:0};var r=pt.matrixTransform(ctm.inverse());return{x:r.x,y:r.y}}
-function startDrag(e,id){var part=S.parts.find(function(p){return p.id===id});if(!part)return;S.selP=id;S.selW=null;var p=toSvg(e);dragRef={id:id,ox:p.x-part.x,oy:p.y-part.y};renderParts()}
-window.addEventListener('pointermove',function(e){if(dragRef){var p=toSvg(e);var part=S.parts.find(function(x){return x.id===dragRef.id});if(part){part.x=p.x-dragRef.ox;part.y=p.y-dragRef.oy;renderParts()}}if(S.pend){window._cx=toSvg(e).x;window._cy=toSvg(e).y;renderParts()}});
-window.addEventListener('pointerup',function(){dragRef=null});
-window.addEventListener('keydown',function(e){if(e.key==='Escape'){S.pend=null;renderParts()}if((e.key==='Delete'||e.key==='Backspace')&&document.activeElement.tagName!=='TEXTAREA'){if(S.selW){S.wires=S.wires.filter(function(w){return w.id!==S.selW});S.selW=null;renderParts()}else if(S.selP){var p=S.parts.find(function(x){return x.id===S.selP});if(p&&p.type!=='am'){S.parts=S.parts.filter(function(x){return x.id!==S.selP});S.wires=S.wires.filter(function(w){return w.fp!==S.selP&&w.tp!==S.selP});S.selP=null;renderParts()}}}});
-function pinClick(pid,pi){if(S.pend){if(S.pend.pid===pid&&S.pend.pi===pi){S.pend=null}else{S.wires.push({id:nid('w'),fp:S.pend.pid,fpi:S.pend.pi,tp:pid,tpi:pi,color:S.wc});S.pend=null}}else{S.pend={pid:pid,pi:pi};var svg=document.getElementById('svg');var pt=svg.createSVGPoint();pt.x=event.clientX;pt.y=event.clientY;var ctm=svg.getScreenCTM();if(ctm){var r=pt.matrixTransform(ctm.inverse());window._cx=r.x;window._cy=r.y}}renderParts()}
-function selectWire(id){S.selW=id;S.selP=null;renderParts()}
-document.getElementById('svg').addEventListener('pointerdown',function(){if(S.pend){S.pend=null;renderParts()}else{S.selP=null;S.selW=null;renderParts()}});
-var jyDrag=false,jyMoved=false;document.addEventListener('pointerdown',function(e){var svg=document.getElementById('svg');var pt=toSvg(e);for(var part of S.parts){if(part.type==='jy'){var dx=pt.x-part.x-65,dy=pt.y-part.y-65;if(Math.hypot(dx,dy)<28){jyDrag=part.id;jyMoved=false;e.preventDefault();break}}}},true);document.addEventListener('pointermove',function(e){if(jyDrag){var pt=toSvg(e);var part=S.parts.find(function(p){return p.id===jyDrag});if(part){var dx=pt.x-part.x-65,dy=pt.y-part.y-65;if(Math.hypot(dx,dy)>5)jyMoved=true;var c1=S.pv[part.id+':vrx']||{l:512};var c2=S.pv[part.id+':vry']||{l:512};S.pv[part.id+':vrx']={m:'i',l:Math.max(0,Math.min(1023,c1.l+e.movementX*6))};S.pv[part.id+':vry']={m:'i',l:Math.max(0,Math.min(1023,c2.l-e.movementY*6))};renderParts()}}},true);document.addEventListener('pointerup',function(){if(jyDrag){if(!jyMoved){var part=S.parts.find(function(p){return p.id===jyDrag});if(part){var cur=S.pv[part.id+':sw'];var cl=cur?cur.l:1;S.pv[part.id+':sw']={m:'pu',l:cl?0:1}}}else{var part=S.parts.find(function(p){return p.id===jyDrag});if(part){S.pv[part.id+':vrx']={m:'i',l:512};S.pv[part.id+':vry']={m:'i',l:512}}}jyDrag=false;jyMoved=false;renderParts()}},true);
-var tftC=document.querySelector('#tfto canvas');
-tftC.addEventListener('pointerdown',function(e){e.stopPropagation();var r=tftC.getBoundingClientRect();setTouch(Math.floor((e.clientX-r.left)/r.width*S.tW),Math.floor((e.clientY-r.top)/r.height*S.tH));renderParts()});
-tftC.addEventListener('pointermove',function(e){if(e.buttons===0)return;e.stopPropagation();var r=tftC.getBoundingClientRect();setTouch(Math.floor((e.clientX-r.left)/r.width*S.tW),Math.floor((e.clientY-r.top)/r.height*S.tH));renderParts()});
-tftC.addEventListener('pointerup',function(){setTimeout(function(){clearTouch();renderParts()},150)});
-tftC.addEventListener('pointerleave',function(){setTimeout(function(){clearTouch();renderParts()},150)});
-var ce=document.getElementById('ce'),hl=document.getElementById('hl'),gt=document.getElementById('gt');
-var KW2=new Set(['int','long','short','byte','char','bool','void','float','double','unsigned','signed','const','static','auto','if','else','while','do','for','return','break','continue','switch','case','default','true','false','new','struct','class','enum','sizeof','String']);
-var AC=new Set(['HIGH','LOW','INPUT','OUTPUT','INPUT_PULLUP','LED_BUILTIN','Serial','SPI','Wire','EEPROM','PI','HALF_PI','TWO_PI','ST77XX_BLACK','ST77XX_WHITE','ST77XX_RED','ST77XX_GREEN','ST77XX_BLUE','ST77XX_CYAN','ST77XX_MAGENTA','ST77XX_YELLOW','BLACK','WHITE','RED','GREEN','BLUE','CYAN','MAGENTA','YELLOW']);
-var AF=new Set(['pinMode','digitalWrite','digitalRead','analogWrite','analogRead','delay','delayMicroseconds','millis','micros','map','constrain','min','max','abs','pow','sqrt','sq','sin','cos','tan','atan2','random','randomSeed','tone','noTone','setup','loop','bitRead','bitSet','bitClear','highByte','lowByte']);
-function highlight(src){var t=[],i=0;while(i<src.length){var c=src[i];if(c==='/'&&src[i+1]==='/'){var j=i;while(j<src.length&&src[j]!=='\n')j++;t.push({t:src.slice(i,j),c:'tok-com'});i=j;continue}if(c==='/'&&src[i+1]==='*'){var j=i+2;while(j<src.length&&!(src[j]==='*'&&src[j+1]==='/'))j++;j=Math.min(src.length,j+2);t.push({t:src.slice(i,j),c:'tok-com'});i=j;continue}if(c==='#'){var j=i;while(j<src.length&&src[j]!=='\n')j++;t.push({t:src.slice(i,j),c:'tok-pre'});i=j;continue}if(c=='"'){var j=i+1;while(j<src.length&&src[j]!=='"'){if(src[j]==='\\')j++;j++}j++;t.push({t:src.slice(i,j),c:'tok-str'});i=j;continue}if(c=="'"){var j=i+1;while(j<src.length&&src[j]!=="'"){if(src[j]==='\\')j++;j++}j++;t.push({t:src.slice(i,j),c:'tok-str'});i=j;continue}if(/[0-9]/.test(c)||(c==='.'&&/[0-9]/.test(src[i+1]||''))){var j=i;if(c==='0'&&(src[i+1]==='x'||src[i+1]==='X')){j=i+2;while(j<src.length&&/[0-9a-fA-F]/.test(src[j]))j++}else{while(j<src.length&&/[0-9.]/.test(src[j]))j++;if(src[j]==='e'||src[j]==='E'){j++;if(src[j]==='+'||src[j]==='-')j++;while(j<src.length&&/[0-9]/.test(src[j]))j++}}while(j<src.length&&/[uUlLfF]/.test(src[j]))j++;t.push({t:src.slice(i,j),c:'tok-num'});i=j;continue}if(/[A-Za-z_]/.test(c)){var j=i;while(j<src.length&&/[A-Za-z0-9_]/.test(src[j]))j++;var w=src.slice(i,j);var cls='';if(KW2.has(w))cls='tok-kw';else if(AC.has(w))cls='tok-const';else if(AF.has(w))cls='tok-fn';else{var k=j;while(k<src.length&&src[k]===' ')k++;if(src[k]==='(')cls='tok-fn'}t.push({t:w,c:cls});i=j;continue}t.push({t:c,c:''});i++}return t.map(function(x){var e=x.t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');return x.c?'<span class="'+x.c+'">'+e+'</span>':e}).join('')}
-function updateEditor(){hl.innerHTML=highlight(S.code)+'\n';var lines=S.code.split('\n').length;gt.textContent=Array.from({length:lines},function(_,i){return i+1}).join('\n');S.code=ce.value}
-ce.value=S.code;ce.addEventListener('input',function(){S.code=ce.value;updateEditor()});ce.addEventListener('scroll',function(){hl.scrollTop=ce.scrollTop;hl.scrollLeft=ce.scrollLeft;gt.scrollTop=ce.scrollTop});updateEditor();
-var wcs=document.getElementById('wcs');WC.forEach(function(c){var b=document.createElement('div');b.className='wc'+(c===S.wc?' sel':'');b.style.background=c;b.onclick=function(){S.wc=c;wcs.querySelectorAll('.wc').forEach(function(x){x.classList.remove('sel')});b.classList.add('sel')};wcs.appendChild(b)});
-var pal=document.getElementById('pal');pal.innerHTML='<div class="h">Add a part</div>';PAL.forEach(function(t){var def=PARTS[t];var b=document.createElement('button');b.className='i';var icons={lr:'🔴',lg:'🟢',ly:'🟡',jy:'🕹️',sv:'⚙️',tft:'🖥️',bz:'🔊'};b.innerHTML='<div class="ic">'+(icons[t]||'?')+'</div><div><div class="nm">'+def.n+'</div></div>';b.onclick=function(){var c=S.parts.length;S.parts.push({id:nid(t),type:t,x:100+(c%5)*160,y:540+Math.floor(c/5)*200,rotation:0});pal.style.display='none';renderParts()};pal.appendChild(b)});
-document.getElementById('ab').onclick=function(){pal.style.display=pal.style.display==='none'?'block':'none'};
-document.getElementById('rbtn').onclick=async function(){if(S.running){aborted=true;S.running=false;this.textContent='▶ Run';this.className='btn btn-run';return}S.running=true;aborted=false;this.textContent='■ Stop';this.className='btn btn-stop';S.serial=[];S.pv={};S.tbuf=new Uint16Array(S.tW*S.tH);renderSerial();renderParts();try{prog=parse(S.code);startTime=Date.now();await compile(prog);await runProg()}catch(e){appendSerial('\n[ERROR] '+e+'\n')}S.running=false;aborted=true;this.textContent='▶ Run';this.className='btn btn-run'};
-document.getElementById('rsbtn').onclick=function(){aborted=true;S.running=false;S.serial=[];S.pv={};S.tbuf=new Uint16Array(S.tW*S.tH);document.getElementById('rbtn').textContent='▶ Run';document.getElementById('rbtn').className='btn btn-run';renderSerial();renderParts()};
-document.getElementById('svbtn').onclick=function(){var data=JSON.stringify({parts:S.parts,wires:S.wires,code:S.code});var blob=new Blob([data],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='arduino-mega-sim.json';a.click()};
-document.getElementById('ldbtn').onclick=function(){document.getElementById('fi').click()};
-document.getElementById('fi').onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(d.parts)S.parts=d.parts;if(d.wires)S.wires=d.wires;if(d.code)S.code=d.code;ce.value=S.code;updateEditor();renderParts()}catch(err){}};r.readAsText(f);e.target.value=''};
-var exBtn=document.getElementById('exbtn'),exDd=document.getElementById('exdd');
-var EX=[{t:'01 · Blink',d:'Blink LED on D13',c:BC},{t:'02 · Joystick+Servo',d:'Default demo',c:DC},{t:'03 · TFT Hello',d:'Text on TFT',c:TC}];
-exBtn.onclick=function(){exDd.style.display=exDd.style.display==='none'?'block':'none'};
-exDd.innerHTML='<div class="eh">Load an example</div>';EX.forEach(function(ex){var b=document.createElement('button');b.className='ei';b.innerHTML='<div class="t">'+ex.t+'</div><div class="d">'+ex.d+'</div>';b.onclick=function(){aborted=true;S.running=false;S.serial=[];S.pv={};S.tbuf=new Uint16Array(240*320);S.tW=240;S.tH=320;S.code=ex.c;ce.value=S.code;updateEditor();exDd.style.display='none';renderParts();renderSerial();document.getElementById('rbtn').textContent='▶ Run';document.getElementById('rbtn').className='btn btn-run'};exDd.appendChild(b)});
-S.parts=[{id:'am',type:'am',x:360,y:280,rotation:0},{id:'jy',type:'jy',x:1080,y:240,rotation:0},{id:'sv',type:'sv',x:1080,y:460,rotation:0},{id:'ly',type:'ly',x:1280,y:380,rotation:0}];
-S.wires=[{id:'w1',fp:'am',fpi:'gnd1',tp:'jy',tpi:'gnd',color:'#000000'},{id:'w2',fp:'am',fpi:'5v',tp:'jy',tpi:'vcc',color:'#ef4444'},{id:'w3',fp:'am',fpi:'a0',tp:'jy',tpi:'vrx',color:'#22c55e'},{id:'w4',fp:'am',fpi:'a1',tp:'jy',tpi:'vry',color:'#3b82f6'},{id:'w5',fp:'am',fpi:'d2',tp:'jy',tpi:'sw',color:'#eab308'},{id:'w6',fp:'am',fpi:'gnd2',tp:'sv',tpi:'gnd',color:'#000000'},{id:'w7',fp:'am',fpi:'5v',tp:'sv',tpi:'vcc',color:'#ef4444'},{id:'w8',fp:'am',fpi:'d5',tp:'sv',tpi:'sig',color:'#f97316'},{id:'w9',fp:'am',fpi:'d13',tp:'ly',tpi:'a',color:'#eab308'},{id:'w10',fp:'am',fpi:'gnd3',tp:'ly',tpi:'k',color:'#000000'}];
-renderParts();renderSerial();
-</script></body></html>
+
+void loop() {
+  tft.fillCircle(bx, by, 10, ST77XX_BLACK);
+  bx += dx;
+  by += dy;
+  if (bx < 30 || bx > 210) dx = -dx;
+  if (by < 60 || by > 220) dy = -dy;
+  tft.fillCircle(bx, by, 10, ST77XX_MAGENTA);
+  delay(20);
+}`;
+
+const EX04 = `// 04 - Traffic light: red -> green -> yellow on three external LEDs
+const int RED_PIN = 2;
+const int YELLOW_PIN = 3;
+const int GREEN_PIN = 4;
+
+void setLights(int r, int y, int g) {
+  digitalWrite(RED_PIN, r);
+  digitalWrite(YELLOW_PIN, y);
+  digitalWrite(GREEN_PIN, g);
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(YELLOW_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+}
+
+void loop() {
+  setLights(HIGH, LOW, LOW);
+  Serial.println("RED - stop");
+  delay(3000);
+
+  setLights(LOW, LOW, HIGH);
+  Serial.println("GREEN - go");
+  delay(3000);
+
+  setLights(LOW, HIGH, LOW);
+  Serial.println("YELLOW - slow down");
+  delay(1000);
+}`;
+
+const EX05 = `// 05 - TFT touch demo: tap the screen to draw dots, tap CLEAR to wipe
+// Touch controller (XPT2046) on A0-A4, display on D8-D10.
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7789.h>
+
+#define TFT_CS  10
+#define TFT_DC   9
+#define TFT_RST  8
+#define T_CS  A0
+#define T_CLK A1
+#define T_DIN A2
+#define T_DO  A3
+#define T_IRQ A4
+
+Adafruit_ST7789 tft(TFT_CS, TFT_DC, TFT_RST);
+int count = 0;
+
+int readADC(int ch) {
+  digitalWrite(T_CS, LOW);
+  int cmd = 0x80 | (ch << 4);
+  for (int i = 7; i >= 0; i--) {
+    digitalWrite(T_CLK, LOW);
+    digitalWrite(T_DIN, (cmd >> i) & 1);
+    digitalWrite(T_CLK, HIGH);
+  }
+  int r = 0;
+  for (int i = 11; i >= 0; i--) {
+    digitalWrite(T_CLK, LOW);
+    r |= digitalRead(T_DO) << i;
+    digitalWrite(T_CLK, HIGH);
+  }
+  digitalWrite(T_CLK, LOW);
+  digitalWrite(T_CS, HIGH);
+  return r >> 3;
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(T_CS, OUTPUT);
+  pinMode(T_CLK, OUTPUT);
+  pinMode(T_DIN, OUTPUT);
+  pinMode(T_DO, INPUT);
+  pinMode(T_IRQ, INPUT);
+  digitalWrite(T_CS, HIGH);
+
+  tft.init(240, 320);
+  tft.fillScreen(ST77XX_BLACK);
+  tft.setTextColor(ST77XX_CYAN);
+  tft.setTextSize(2);
+  tft.setCursor(20, 8);
+  tft.print("Tap the screen");
+  tft.fillRect(20, 260, 200, 40, ST77XX_BLUE);
+  tft.setCursor(90, 272);
+  tft.setTextColor(ST77XX_WHITE);
+  tft.print("CLEAR");
+}
+
+void loop() {
+  if (digitalRead(T_IRQ) == LOW) {
+    int rx = readADC(1);
+    int ry = readADC(5);
+    int x = map(ry, 40, 240, 0, 239);
+    int y = map(rx, 246, -9, 0, 319);
+
+    if (x > 20 && x < 220 && y > 260 && y < 300) {
+      tft.fillRect(0, 35, 240, 185, ST77XX_BLACK);
+      count = 0;
+    } else if (y < 220) {
+      tft.fillCircle(x, y, 4, ST77XX_YELLOW);
+      count++;
+    }
+    tft.fillRect(0, 225, 240, 25, ST77XX_BLACK);
+    tft.setCursor(20, 230);
+    tft.setTextColor(ST77XX_WHITE);
+    tft.setTextSize(2);
+    tft.print("Dots: ");
+    tft.print(count);
+    Serial.print("touch x=");
+    Serial.print(x);
+    Serial.print(" y=");
+    Serial.println(y);
+  }
+  delay(30);
+}`;
+
+const TFT_WIRES = [['am|5v', 'tft1|vcc'], ['am|gnd1', 'tft1|gnd'], ['am|5v', 'tft1|bl'],
+  ['am|d10', 'tft1|cs'], ['am|d9', 'tft1|dc'], ['am|d8', 'tft1|rst'], ['am|d51', 'tft1|mosi'], ['am|d52', 'tft1|sck']];
+
+const EXAMPLES = [
+  { title: '01 · Blink an LED', desc: 'Onboard LED + an external red LED on D13.', code: EX01,
+    parts: [{ id: 'led1', type: 'led', x: 420, y: 420, color: 'red' }],
+    wires: [['am|d13', 'led1|a'], ['led1|k', 'am|gnd1']] },
+  { title: '02 · Joystick + Servo + LED', desc: 'Read the analog joystick and drive a servo + indicator LED.', code: EX02,
+    parts: [{ id: 'jy1', type: 'jy', x: 110, y: 400 }, { id: 'sv1', type: 'sv', x: 420, y: 420 },
+      { id: 'led1', type: 'led', x: 640, y: 420, color: 'red' }],
+    wires: [['am|gnd1', 'jy1|gnd'], ['am|5v', 'jy1|vcc'], ['am|a0', 'jy1|vrx'], ['am|d2', 'jy1|sw'],
+      ['am|gnd2', 'sv1|gnd'], ['am|5v', 'sv1|vcc'], ['am|d5', 'sv1|sig'],
+      ['am|d7', 'led1|a'], ['led1|k', 'am|gnd3']] },
+  { title: '03 · ST7789 TFT demo', desc: 'Draw text, shapes, and a bouncing ball on the TFT.', code: EX03,
+    parts: [{ id: 'tft1', type: 'tft', x: 400, y: 380 }], wires: TFT_WIRES },
+  { title: '04 · Traffic light', desc: 'Cycle red → green → yellow on three external LEDs.', code: EX04,
+    parts: [{ id: 'led1', type: 'led', x: 100, y: 420, color: 'red' },
+      { id: 'led2', type: 'led', x: 300, y: 420, color: 'yellow' },
+      { id: 'led3', type: 'led', x: 500, y: 420, color: 'green' }],
+    wires: [['am|d2', 'led1|a'], ['am|d3', 'led2|a'], ['am|d4', 'led3|a'],
+      ['am|gnd1', 'led1|k'], ['am|gnd1', 'led2|k'], ['am|gnd1', 'led3|k']] },
+  { title: '05 · TFT Touch demo', desc: 'Tap the TFT to draw dots, tap CLEAR to wipe the screen. Touch read over XPT2046.', code: EX05,
+    parts: [{ id: 'tft1', type: 'tft', x: 400, y: 380 }],
+    wires: TFT_WIRES.concat([['am|a0', 'tft1|tcs'], ['am|a1', 'tft1|tclk'], ['am|a2', 'tft1|tdin'],
+      ['am|a3', 'tft1|tdo'], ['am|a4', 'tft1|tirq']]) }
+];
+// PART 1 END
+// ============================================================
+// STATE
+// ============================================================
+let parts = [], wires = [], WID = 0, PID = 0;
+let selPart = null, selWire = null, pend = null, mouse = { x: 0, y: 0 }, drag = null, joy = null;
+let dirty = true;
+const markDirty = () => { dirty = true; };
+const board = { mode: Array(70).fill('in'), out: Array(70).fill(0) };
+const touch = { down: false, x: 0, y: 0, csWas: 1, clk: 0, bits: 0, cmd: 0, resp: 0 };
+let TFTINST = null;
+const bit = v => (v >= 128 ? 1 : 0);
+
+const mkPart = s => ({ id: s.id, type: s.type, x: s.x, y: s.y, color: s.color || 'red', vx: 512, vy: 512, pressed: false, angle: 90 });
+const boardPart = () => mkPart({ id: 'am', type: 'am', x: 40, y: 40 });
+const PART = id => parts.find(p => p.id === id);
+const tftPart = () => parts.find(p => p.type === 'tft');
+function nextId(type) {
+  let id;
+  do { id = type + (++PID); } while (PART(id));
+  return id;
+}
+
+// ============================================================
+// NETS (union-find over pin endpoints)
+// ============================================================
+let parent = {}, summ = {};
+const ukey = (pid, pin) => pid + '|' + pin;
+function find(k) {
+  if (parent[k] === undefined) parent[k] = k;
+  while (parent[k] !== k) { parent[k] = parent[parent[k]]; k = parent[k]; }
+  return k;
+}
+function union(a, b) { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; }
+const pinNum = id => (id[0] === 'd' ? +id.slice(1) : 54 + +id.slice(1));
+const rootOf = (pid, pin) => find(ukey(pid, pin));
+
+function buildNets() {
+  parent = {}; summ = {};
+  const am = PART('am');
+  for (const p of parts) for (const pin of DEFS[p.type].pins) find(ukey(p.id, pin.id));
+  for (const w of wires) union(ukey(w.a[0], w.a[1]), ukey(w.b[0], w.b[1]));
+  if (am) {
+    union(ukey(am.id, 'gnd2'), ukey(am.id, 'gnd1'));
+    union(ukey(am.id, 'gnd3'), ukey(am.id, 'gnd1'));
+    union(ukey(am.id, '3v3'), ukey(am.id, '5v'));
+  }
+  for (const p of parts) if (p.type === 'jy' && p.pressed) union(ukey(p.id, 'sw'), ukey(p.id, 'gnd'));
+  for (const k of Object.keys(parent)) {
+    const r = find(k), i = k.indexOf('|'), pid = k.slice(0, i), pin = k.slice(i + 1);
+    const s = summ[r] || (summ[r] = { size: 0, ard: [], gnd: false, v5: false, jvx: null, jvy: null, tdo: false, tirq: false });
+    s.size++;
+    if (am && pid === am.id) {
+      if (pin[0] === 'd' || pin[0] === 'a') s.ard.push(pinNum(pin));
+      else if (pin.startsWith('gnd')) s.gnd = true;
+      else if (pin === '5v' || pin === '3v3') s.v5 = true;
+    } else {
+      const p = PART(pid);
+      if (p && p.type === 'jy') { if (pin === 'vrx') s.jvx = p; if (pin === 'vry') s.jvy = p; }
+      if (p && p.type === 'tft') { if (pin === 'tdo') s.tdo = true; if (pin === 'tirq') s.tirq = true; }
+    }
+  }
+}
+
+// Level of a net: outputs win, then touch IRQ, then rails, then pull-ups
+function levelOfNet(r) {
+  const s = summ[r];
+  if (!s) return 0;
+  for (const n of s.ard) if (board.mode[n] === 'out') return board.out[n];
+  if (s.tirq) return touch.down ? 0 : 255;
+  if (s.gnd) return 0;
+  if (s.v5) return 255;
+  for (const n of s.ard) if (board.mode[n] === 'pu') return 255;
+  return 0;
+}
+const levelOfPart = (pid, pin) => levelOfNet(rootOf(pid, pin));
+const ardPinOfPart = (pid, pin) => { const s = summ[rootOf(pid, pin)]; return s && s.ard.length ? s.ard[0] : -1; };
+const ledLit = p => levelOfPart(p.id, 'a') >= 128 && levelOfPart(p.id, 'k') < 128;
+
+function rootOfArd(n) {
+  const am = PART('am');
+  if (!am) return null;
+  return rootOf(am.id, n >= 54 ? 'a' + (n - 54) : 'd' + n);
+}
+function digitalReadPin(n) {
+  const r = rootOfArd(n), s = r ? summ[r] : null;
+  if (!s || s.size < 2) {
+    const m = board.mode[n];
+    if (m === 'out') return board.out[n] >= 128 ? 1 : 0;
+    return m === 'pu' ? 1 : 0;
+  }
+  if (s.tdo) return touchDo();
+  if (board.mode[n] === 'out') return board.out[n] >= 128 ? 1 : 0;
+  return bit(levelOfNet(r));
+}
+function analogReadPin(n) {
+  const r = rootOfArd(n), s = r ? summ[r] : null;
+  if (!s || s.size < 2) return 0;
+  if (s.jvx) return s.jvx.vx;
+  if (s.jvy) return s.jvy.vy;
+  return levelOfNet(r) >= 128 ? 1023 : 0;
+}
+function setMode(n, m) { board.mode[n] = m === 1 ? 'out' : m === 2 ? 'pu' : 'in'; markDirty(); }
+function digitalWritePin(n, v) { board.mode[n] = 'out'; board.out[n] = v ? 255 : 0; touchPoll(); markDirty(); }
+function analogWritePin(n, v) { board.mode[n] = 'out'; board.out[n] = clamp(Math.round(v), 0, 255); touchPoll(); markDirty(); }
+
+// ============================================================
+// XPT2046 TOUCH CONTROLLER (driven by the Arduino's SPI bit-bang on T_CS/T_CLK/T_DIN/T_DO)
+// ============================================================
+function touchResp(cmd) {
+  if (!touch.down) return 0;
+  const ch = (cmd >> 4) & 7;
+  let raw = 0;
+  if (ch === 5) raw = Math.round(40 + touch.x * 200 / 239);     // x position
+  else if (ch === 1) raw = Math.round(246 - touch.y * 255 / 319); // y position
+  return raw << 3;
+}
+function touchPoll() {
+  const t = tftPart();
+  if (!t) return;
+  const cs = bit(levelOfPart(t.id, 'tcs'));
+  const clk = bit(levelOfPart(t.id, 'tclk'));
+  const din = bit(levelOfPart(t.id, 'tdin'));
+  if (cs) { touch.csWas = 1; touch.bits = 0; touch.cmd = 0; }
+  else {
+    if (touch.csWas) { touch.csWas = 0; touch.bits = 0; touch.cmd = 0; }
+    if (clk && !touch.clk) {
+      if (touch.bits < 8) {
+        touch.cmd = (touch.cmd << 1) | din;
+        touch.bits++;
+        if (touch.bits === 8) touch.resp = touchResp(touch.cmd);
+      } else touch.bits++;
+    }
+  }
+  touch.clk = clk;
+}
+function touchDo() {
+  if (touch.csWas || touch.bits < 8 || touch.bits > 19) return 0;
+  return (touch.resp >> (11 - (touch.bits - 8))) & 1;
+}
+function tftWired() {
+  const t = tftPart();
+  if (!t || !TFTINST) return false;
+  const want = { cs: TFTINST.cs, dc: TFTINST.dc, rst: TFTINST.rst };
+  for (const role of ['cs', 'dc', 'rst']) {
+    const s = summ[rootOf(t.id, role)];
+    if (!s || !s.ard.includes(want[role])) return false;
+  }
+  const pw = summ[rootOf(t.id, 'vcc')], gd = summ[rootOf(t.id, 'gnd')];
+  return !!(pw && pw.v5 && gd && gd.gnd);
+}
+
+// ============================================================
+// TFT DISPLAY (drawn on the overlay canvas that sits on the TFT part)
+// ============================================================
+const css = c => {
+  const r = Math.round(((c >> 11) & 31) * 255 / 31), g = Math.round(((c >> 5) & 63) * 255 / 63), b = Math.round((c & 31) * 255 / 31);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+};
+function fmt(v, m) {
+  if (typeof v === 'string') return v;
+  if (m === 'char') return String.fromCharCode(v);
+  if (m === 'float') return Number.isFinite(v) ? Number(v).toFixed(2) : String(v);
+  return String(Math.trunc(Number(v) || 0));
+}
+function fmtBase(v, base, m) {
+  if (typeof v === 'number' && base === 16) return Math.trunc(v).toString(16).toUpperCase();
+  if (typeof v === 'number' && base === 2) return Math.trunc(v).toString(2);
+  return fmt(v, m);
+}
+
+class TFTObj {
+  constructor(cs, dc, rst) {
+    this.cs = cs; this.dc = dc; this.rst = rst;
+    this.cx = 0; this.cy = 0; this.col = 0xffff; this.sz = 1;
+    TFTINST = this;
+    markDirty();
+  }
+  init() { this.fillScreen(0); markDirty(); }
+  fillScreen(c) { this.fillRect(0, 0, 240, 320, c); }
+  fillRect(x, y, w, h, c) { TG.fillStyle = css(c); TG.fillRect(x, y, w, h); markDirty(); }
+  drawRect(x, y, w, h, c) { TG.strokeStyle = css(c); TG.lineWidth = 1; TG.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1); markDirty(); }
+  drawPixel(x, y, c) { this.fillRect(x, y, 1, 1, c); }
+  drawFastHLine(x, y, w, c) { this.fillRect(x, y, w, 1, c); }
+  drawFastVLine(x, y, h, c) { this.fillRect(x, y, 1, h, c); }
+  drawLine(x0, y0, x1, y1, c) {
+    TG.strokeStyle = css(c); TG.lineWidth = 1;
+    TG.beginPath(); TG.moveTo(x0 + 0.5, y0 + 0.5); TG.lineTo(x1 + 0.5, y1 + 0.5); TG.stroke(); markDirty();
+  }
+  drawCircle(x, y, r, c) { TG.strokeStyle = css(c); TG.lineWidth = 1; TG.beginPath(); TG.arc(x + 0.5, y + 0.5, r, 0, Math.PI * 2); TG.stroke(); markDirty(); }
+  fillCircle(x, y, r, c) { TG.fillStyle = css(c); TG.beginPath(); TG.arc(x, y, r, 0, Math.PI * 2); TG.fill(); markDirty(); }
+  fillTriangle(x0, y0, x1, y1, x2, y2, c) {
+    TG.fillStyle = css(c); TG.beginPath(); TG.moveTo(x0, y0); TG.lineTo(x1, y1); TG.lineTo(x2, y2); TG.closePath(); TG.fill(); markDirty();
+  }
+  setCursor(x, y) { this.cx = x; this.cy = y; }
+  setTextColor(c) { this.col = c; }
+  setTextSize(s) { this.sz = Math.max(1, s); }
+  setRotation() {}
+  width() { return 240; }
+  height() { return 320; }
+  print(v, base) { this.write(fmtBase(v, base, PM)); }
+  println(v, base) { this.write((v === undefined ? '' : fmtBase(v, base, PM)) + '\n'); }
+  write(s) {
+    TG.font = (10 * this.sz) + 'px monospace';
+    TG.textBaseline = 'top';
+    TG.fillStyle = css(this.col);
+    for (const ch of String(s)) {
+      if (ch === '\n') { this.cx = 0; this.cy += 8 * this.sz; continue; }
+      TG.fillText(ch, this.cx, this.cy);
+      this.cx += 6 * this.sz;
+    }
+    markDirty();
+  }
+}
+
+// ============================================================
+// SERVO, SERIAL
+// ============================================================
+class ServoObj {
+  constructor() { this.pin = null; this.angle = 90; }
+  attach(p) { this.pin = p; return 1; }
+  detach() { this.pin = null; }
+  attached() { return this.pin !== null; }
+  write(a) {
+    this.angle = clamp(Math.round(a), 0, 180);
+    for (const p of parts) if (p.type === 'sv' && ardPinOfPart(p.id, 'sig') === this.pin) p.angle = this.angle;
+    markDirty();
+  }
+  writeMicroseconds() {}
+  read() { return this.angle; }
+}
+
+let serialText = '';
+function serialOut(s) {
+  serialText += s;
+  if (serialText.length > 20000) serialText = serialText.slice(-20000);
+  const el = $('ser');
+  el.textContent = serialText;
+  el.scrollTop = el.scrollHeight;
+}
+class SerialObj {
+  begin() {}
+  end() {}
+  available() { return 0; }
+  read() { return -1; }
+  flush() {}
+  print(v, base) { serialOut(fmtBase(v, base, PM)); }
+  println(v, base) { serialOut((v === undefined ? '' : fmtBase(v, base, PM)) + '\n'); }
+  write(v) { serialOut(typeof v === 'number' ? String.fromCharCode(v & 255) : String(v)); }
+}
+
+const CONSTS = {
+  HIGH: 1, LOW: 0, INPUT: 0, OUTPUT: 1, INPUT_PULLUP: 2, LED_BUILTIN: 13,
+  DEC: 10, HEX: 16, BIN: 2, OCT: 8, PI: Math.PI, HALF_PI: Math.PI / 2, TWO_PI: Math.PI * 2,
+  ST77XX_BLACK: 0x0000, ST77XX_WHITE: 0xffff, ST77XX_RED: 0xf800, ST77XX_GREEN: 0x07e0, ST77XX_BLUE: 0x001f,
+  ST77XX_CYAN: 0x07ff, ST77XX_MAGENTA: 0xf81f, ST77XX_YELLOW: 0xffe0, ST77XX_ORANGE: 0xfd20,
+  BLACK: 0x0000, WHITE: 0xffff, RED: 0xf800, GREEN: 0x07e0, BLUE: 0x001f, CYAN: 0x07ff, MAGENTA: 0xf81f, YELLOW: 0xffe0,
+  Serial: new SerialObj()
+};
+for (let i = 0; i < 16; i++) CONSTS['A' + i] = 54 + i;
+// PART 2 END
+// ============================================================
+// C++ SUBSET: LEXER
+// ============================================================
+const KW = new Set(['if', 'else', 'while', 'do', 'for', 'return', 'break', 'continue', 'switch', 'case', 'default', 'true', 'false', 'new']);
+const TYPES = new Set(['void', 'int', 'long', 'short', 'byte', 'char', 'bool', 'float', 'double', 'unsigned', 'signed', 'const', 'static', 'volatile',
+  'uint8_t', 'uint16_t', 'uint32_t', 'int8_t', 'int16_t', 'int32_t', 'word', 'size_t', 'String']);
+const NUMT = new Set(['int', 'long', 'short', 'byte', 'unsigned', 'signed', 'word', 'size_t', 'uint8_t', 'uint16_t', 'uint32_t', 'int8_t', 'int16_t', 'int32_t']);
+const BUILTIN_T = new Set(['void', 'int', 'float', 'char', 'bool', 'str']);
+const OPS = ['<<=', '>>=', '<<', '>>', '<=', '>=', '==', '!=', '&&', '||', '++', '--', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '->', '::'];
+const PREC = { '||': 1, '&&': 2, '|': 3, '^': 4, '&': 5, '==': 6, '!=': 6, '<': 7, '>': 7, '<=': 7, '>=': 7, '<<': 8, '>>': 8, '+': 9, '-': 9, '*': 10, '/': 10, '%': 10 };
+const ASSIGN_OPS = ['=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>='];
+const CMP = new Set(['<', '>', '<=', '>=', '==', '!=', '&&', '||']);
+const MATH_F = new Set(['sin', 'cos', 'tan', 'atan', 'atan2', 'asin', 'acos', 'sqrt', 'pow', 'radians', 'degrees']);
+
+function lex(src, defs) {
+  const out = [];
+  let i = 0, line = 1;
+  const n = src.length;
+  const esc = c => ({ n: '\n', t: '\t', r: '\r', '0': '\0', '\\': '\\', "'": "'", '"': '"' })[c] ?? c;
+  while (i < n) {
+    const c = src[i];
+    if (c === '\n') { line++; i++; continue; }
+    if (c === ' ' || c === '\t' || c === '\r') { i++; continue; }
+    if (c === '/' && src[i + 1] === '/') { while (i < n && src[i] !== '\n') i++; continue; }
+    if (c === '/' && src[i + 1] === '*') {
+      i += 2;
+      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) { if (src[i] === '\n') line++; i++; }
+      i += 2; continue;
+    }
+    if (c === '#') {
+      let j = i;
+      while (j < n && src[j] !== '\n') j++;
+      const m = src.slice(i, j).match(/^#\s*define\s+([A-Za-z_]\w*)\s+(.+?)\s*$/);
+      if (m) defs[m[1]] = m[2];
+      i = j; continue;
+    }
+    if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(src[i + 1] || ''))) {
+      let j = i, f = false, v;
+      if (c === '0' && /[xX]/.test(src[i + 1] || '')) {
+        j = i + 2;
+        while (j < n && /[0-9a-fA-F]/.test(src[j])) j++;
+        v = parseInt(src.slice(i + 2, j), 16);
+      } else {
+        while (j < n && /[0-9]/.test(src[j])) j++;
+        if (src[j] === '.') { f = true; j++; while (j < n && /[0-9]/.test(src[j])) j++; }
+        if (/[eE]/.test(src[j] || '') && /[0-9+-]/.test(src[j + 1] || '')) {
+          f = true; j++;
+          if (/[+-]/.test(src[j])) j++;
+          while (j < n && /[0-9]/.test(src[j])) j++;
+        }
+        v = parseFloat(src.slice(i, j));
+      }
+      while (j < n && /[uUlL]/.test(src[j])) j++;
+      if (j < n && /[fF]/.test(src[j])) { f = true; j++; }
+      out.push({ t: 'num', v, f, line }); i = j; continue;
+    }
+    if (c === '"') {
+      let j = i + 1, s = '';
+      while (j < n && src[j] !== '"') {
+        if (src[j] === '\\') { s += esc(src[j + 1]); j += 2; } else s += src[j++];
+      }
+      i = j + 1; out.push({ t: 'str', v: s, line }); continue;
+    }
+    if (c === "'") {
+      let j = i + 1, v;
+      if (src[j] === '\\') { v = esc(src[j + 1]).charCodeAt(0); j += 2; } else { v = src.charCodeAt(j); j++; }
+      i = j + 1; out.push({ t: 'chr', v, line }); continue;
+    }
+    if (/[A-Za-z_]/.test(c)) {
+      let j = i;
+      while (j < n && /\w/.test(src[j])) j++;
+      const w = src.slice(i, j);
+      i = j;
+      if (Object.prototype.hasOwnProperty.call(defs, w)) { out.push(...lex(defs[w], defs)); continue; }
+      out.push({ t: (KW.has(w) || TYPES.has(w)) ? 'kw' : 'id', v: w, line });
+      continue;
+    }
+    const op = OPS.find(o => src.startsWith(o, i)) || c;
+    out.push({ t: 'op', v: op, line });
+    i += op.length;
+  }
+  return out;
+}
+
+// ============================================================
+// C++ SUBSET: PARSER (produces a plain-object AST)
+// ============================================================
+function normType(parts) {
+  if (parts.includes('float') || parts.includes('double')) return 'float';
+  if (parts.includes('void')) return 'void';
+  if (parts.includes('char')) return 'char';
+  if (parts.includes('bool')) return 'bool';
+  if (parts.includes('String')) return 'str';
+  if (parts.length === 0 || parts.some(x => NUMT.has(x))) return 'int';
+  return parts[parts.length - 1];
+}
+
+function parseProgram(src) {
+  const toks = lex(src, {});
+  toks.push({ t: 'eof', v: '', line: toks.length ? toks[toks.length - 1].line : 1 });
+  let p = 0;
+  const peek = (k = 0) => toks[Math.min(p + k, toks.length - 1)];
+  const next = () => toks[p++];
+  const perr = m => new Error('line ' + peek().line + ': ' + m);
+  const isOp = (v, k = 0) => { const t = peek(k); return t.t === 'op' && t.v === v; };
+  const isKw = (v, k = 0) => { const t = peek(k); return t.t === 'kw' && t.v === v; };
+  const accept = v => { if (isOp(v)) { p++; return true; } return false; };
+  const expect = v => { if (!accept(v)) throw perr("expected '" + v + "' but found '" + (peek().v || 'end of file') + "'"); };
+  const typeTok = (k = 0) => { const t = peek(k); return t.t === 'kw' && TYPES.has(t.v); };
+  const isDeclStart = () => typeTok(0) || (peek().t === 'id' && peek(1).t === 'id');
+
+  function parseType() {
+    const parts = [];
+    while (isKw('const') || isKw('static') || isKw('volatile')) next();
+    while (isKw('unsigned') || isKw('signed') || isKw('long') || isKw('short')) parts.push(next().v);
+    if (typeTok(0)) parts.push(next().v);
+    else if (peek().t === 'id' && parts.length === 0) parts.push(next().v);
+    else if (parts.length === 0) throw perr("expected a type but found '" + peek().v + "'");
+    while (isKw('const')) next();
+    return normType(parts);
+  }
+
+  function parseDecl(ty, nameTok) {
+    const ds = [];
+    let name = nameTok.v;
+    for (;;) {
+      if (isOp('[')) throw perr('arrays are not supported in this simulator (' + name + ')');
+      const d = { name, type: ty, init: null, ctor: null };
+      if (accept('=')) d.init = parseAssign();
+      else if (accept('(')) {
+        d.ctor = [];
+        if (!accept(')')) { do { d.ctor.push(parseAssign()); } while (accept(',')); expect(')'); }
+      }
+      ds.push(d);
+      if (accept(',')) { accept('*'); name = next().v; continue; }
+      break;
+    }
+    expect(';');
+    return { k: 'var', ds };
+  }
+
+  function parseDeclStmt() {
+    const ty = parseType();
+    accept('*');
+    const nameTok = next();
+    if (nameTok.t !== 'id') throw perr('expected a variable name');
+    return parseDecl(ty, nameTok);
+  }
+
+  function parseFunc(ret, nameTok) {
+    expect('(');
+    const params = [];
+    if (!accept(')')) {
+      do {
+        if (isKw('void') && isOp(')', 1)) { next(); break; }
+        const pt = parseType();
+        const ref = accept('&');
+        accept('*');
+        const pn = next();
+        params.push({ n: pn.v, t: pt, ref });
+      } while (accept(','));
+      expect(')');
+    }
+    if (accept(';')) return null;
+    const body = parseBlock();
+    return { k: 'fn', name: nameTok.v, params, ret, body };
+  }
+
+  function parseBlock() {
+    expect('{');
+    const b = [];
+    while (!accept('}')) b.push(parseStmt());
+    return { k: 'block', b };
+  }
+
+  function parseSwitch() {
+    next(); expect('('); const e = parseExpr(); expect(')'); expect('{');
+    const cases = [];
+    while (!accept('}')) {
+      let t = null;
+      if (isKw('case')) { next(); t = parseExpr(); expect(':'); }
+      else if (isKw('default')) { next(); expect(':'); }
+      else throw perr('expected case or default');
+      const b = [];
+      while (!isKw('case') && !isKw('default') && !isOp('}')) b.push(parseStmt());
+      cases.push({ t, b });
+    }
+    return { k: 'switch', e, cases };
+  }
+
+  function parseStmt() {
+    const t = peek();
+    if (isOp('{')) return parseBlock();
+    if (accept(';')) return { k: 'nop' };
+    if (t.t === 'kw') {
+      switch (t.v) {
+        case 'if': {
+          next(); expect('('); const c = parseExpr(); expect(')');
+          const a = parseStmt();
+          let e = null;
+          if (isKw('else')) { next(); e = parseStmt(); }
+          return { k: 'if', c, a, e };
+        }
+        case 'while': { next(); expect('('); const c = parseExpr(); expect(')'); return { k: 'while', c, b: parseStmt() }; }
+        case 'do': {
+          next(); const b = parseStmt();
+          if (!isKw('while')) throw perr("expected 'while' after do body");
+          next(); expect('('); const c = parseExpr(); expect(')'); expect(';');
+          return { k: 'do', b, c };
+        }
+        case 'for': {
+          next(); expect('(');
+          let init = null;
+          if (!accept(';')) {
+            if (isDeclStart()) init = parseDeclStmt();
+            else { init = { k: 'expr', e: parseExpr() }; expect(';'); }
+          }
+          let c = null;
+          if (!isOp(';')) c = parseExpr();
+          expect(';');
+          let u = null;
+          if (!isOp(')')) u = parseExpr();
+          expect(')');
+          return { k: 'for', i: init, c, u, b: parseStmt() };
+        }
+        case 'return': {
+          next();
+          if (accept(';')) return { k: 'ret', e: null };
+          const e = parseExpr(); expect(';');
+          return { k: 'ret', e };
+        }
+        case 'break': next(); expect(';'); return { k: 'brk' };
+        case 'continue': next(); expect(';'); return { k: 'cnt' };
+        case 'switch': return parseSwitch();
+      }
+    }
+    if (isDeclStart()) return parseDeclStmt();
+    const e = parseExpr();
+    expect(';');
+    return { k: 'expr', e };
+  }
+
+  function parseExpr() { return parseAssign(); }
+
+  function parseAssign() {
+    const l = parseCond();
+    const t = peek();
+    if (t.t === 'op' && ASSIGN_OPS.includes(t.v)) { next(); return { k: 'asg', op: t.v, target: l, r: parseAssign() }; }
+    return l;
+  }
+
+  function parseCond() {
+    const c = parseBin(1);
+    if (accept('?')) {
+      const a = parseAssign(); expect(':');
+      return { k: 'cond', c, a, b: parseCond() };
+    }
+    return c;
+  }
+
+  function parseBin(minP) {
+    let l = parseUnary();
+    for (;;) {
+      const t = peek();
+      if (t.t !== 'op' || !Object.prototype.hasOwnProperty.call(PREC, t.v) || PREC[t.v] < minP) break;
+      next();
+      l = { k: 'bin', op: t.v, l, r: parseBin(PREC[t.v] + 1) };
+    }
+    return l;
+  }
+
+  function parseUnary() {
+    const t = peek();
+    if (t.t === 'op') {
+      if (t.v === '-' || t.v === '+' || t.v === '!' || t.v === '~') { next(); return { k: 'un', op: t.v, a: parseUnary() }; }
+      if (t.v === '++' || t.v === '--') { next(); return { k: 'upd', op: t.v, pre: true, a: parseUnary() }; }
+      if (t.v === '&' || t.v === '*') { next(); return parseUnary(); }
+      if (t.v === '(' && typeTok(1) && isOp(')', 2)) {
+        next(); const ty = parseType(); expect(')');
+        return { k: 'cast', ty, a: parseUnary() };
+      }
+    }
+    return parsePostfix();
+  }
+
+  function parsePostfix() {
+    let e = parsePrimary();
+    for (;;) {
+      if (accept('(')) {
+        const args = [];
+        if (!accept(')')) { do { args.push(parseAssign()); } while (accept(',')); expect(')'); }
+        e = { k: 'call', f: e, args };
+      } else if (accept('.')) {
+        e = { k: 'mem', o: e, p: next().v };
+      } else if (isOp('++') || isOp('--')) {
+        const op = next().v;
+        e = { k: 'upd', op, pre: false, a: e };
+      } else break;
+    }
+    return e;
+  }
+
+  function parsePrimary() {
+    const t = next();
+    if (t.t === 'num') return { k: 'lit', v: t.v, f: t.f };
+    if (t.t === 'str') return { k: 'lit', v: t.v, s: true };
+    if (t.t === 'chr') return { k: 'lit', v: t.v, c: true };
+    if (t.t === 'kw' && t.v === 'true') return { k: 'lit', v: 1 };
+    if (t.t === 'kw' && t.v === 'false') return { k: 'lit', v: 0 };
+    if (t.t === 'id') return { k: 'id', n: t.v };
+    if (t.t === 'op' && t.v === '(') { const e = parseExpr(); expect(')'); return e; }
+    throw new Error('line ' + t.line + ": unexpected '" + (t.v || 'end of file') + "'");
+  }
+
+  // Top level
+  const items = [];
+  while (peek().t !== 'eof') {
+    if (accept(';')) continue;
+    const ty = parseType();
+    accept('*');
+    const nameTok = next();
+    if (nameTok.t !== 'id') throw perr('expected a name');
+    if (isOp('(')) {
+      if (!BUILTIN_T.has(ty)) {
+        // Global object with constructor arguments, e.g. Adafruit_ST7789 tft(TFT_CS, TFT_DC, TFT_RST);
+        next();
+        const args = [];
+        if (!accept(')')) { do { args.push(parseAssign()); } while (accept(',')); expect(')'); }
+        expect(';');
+        items.push({ k: 'var', ds: [{ name: nameTok.v, type: ty, init: null, ctor: args }] });
+        continue;
+      }
+      const f = parseFunc(ty, nameTok);
+      if (f) items.push(f);
+      continue;
+    }
+    items.push(parseDecl(ty, nameTok));
+  }
+  return items;
+}
+// PART 3 END
+// ============================================================
+// INTERPRETER
+// ============================================================
+class Scope {
+  constructor(p) { this.v = new Map(); this.p = p; }
+  find(n) {
+    for (let s = this; s; s = s.p) { const c = s.v.get(n); if (c) return c; }
+    return null;
+  }
+}
+class Ret { constructor(v) { this.v = v; } }
+const BRK = { brk: true }, CNT = { cnt: true }, STOPSIG = { stop: true };
+let GLOBAL = new Scope(null), FUNCS = {}, PM = 'int';
+let STOP = false, running = false, T0 = Date.now(), spinN = 0;
+
+const truthy = v => (typeof v === 'number' ? v !== 0 : !!v);
+function coerce(t, v) {
+  if (t === 'float') return Number(v);
+  if (t === 'int' || t === 'char') return typeof v === 'number' ? Math.trunc(v) : v;
+  if (t === 'bool') return v ? 1 : 0;
+  return v;
+}
+function modeOf(t) { return (t === 'float' || t === 'char' || t === 'str') ? t : 'int'; }
+
+function stype(e, sc) {
+  switch (e.k) {
+    case 'lit': return e.s ? 'str' : e.c ? 'char' : e.f ? 'float' : 'int';
+    case 'id': {
+      const c = sc.find(e.n);
+      if (c) return c.t;
+      return (e.n === 'PI' || e.n === 'HALF_PI' || e.n === 'TWO_PI') ? 'float' : 'int';
+    }
+    case 'cast': return e.ty;
+    case 'bin':
+      if (CMP.has(e.op)) return 'int';
+      return (stype(e.l, sc) === 'float' || stype(e.r, sc) === 'float') ? 'float' : 'int';
+    case 'un': return e.op === '!' ? 'int' : stype(e.a, sc);
+    case 'cond': return stype(e.a, sc);
+    case 'asg': return stype(e.target, sc);
+    case 'upd': return stype(e.a, sc);
+    case 'call':
+      if (e.f.k === 'id') {
+        const f = FUNCS[e.f.n];
+        if (f) return f.ret;
+        if (e.f.n === 'F') return 'str';
+        if (MATH_F.has(e.f.n)) return 'float';
+      }
+      return 'int';
+    default: return 'int';
+  }
+}
+
+function binop(op, a, b, fl) {
+  switch (op) {
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/': return fl ? a / b : (b === 0 ? 0 : Math.trunc(a / b));
+    case '%': return b === 0 ? 0 : a % b;
+    case '<': return a < b ? 1 : 0;
+    case '>': return a > b ? 1 : 0;
+    case '<=': return a <= b ? 1 : 0;
+    case '>=': return a >= b ? 1 : 0;
+    case '==': return a === b ? 1 : 0;
+    case '!=': return a !== b ? 1 : 0;
+    case '&': return a & b;
+    case '|': return a | b;
+    case '^': return a ^ b;
+    case '<<': return a << b;
+    case '>>': return a >> b;
+  }
+  return 0;
+}
+
+function makeObj(t, a) {
+  if (t === 'Servo') return new ServoObj();
+  if (t === 'Adafruit_ST7789') return new TFTObj(a[0], a[1], a[2]);
+  throw new Error("unknown type '" + t + "' (this simulator supports Servo and Adafruit_ST7789)");
+}
+
+const yieldNow = () => new Promise(r => setTimeout(r, 0));
+async function spin() { if (STOP) throw STOPSIG; if ((++spinN & 255) === 0) await yieldNow(); }
+function sleepMs(ms) {
+  return new Promise((res, rej) => {
+    const end = Date.now() + ms;
+    const step = () => {
+      if (STOP) return rej(STOPSIG);
+      const left = end - Date.now();
+      if (left <= 0) return res();
+      setTimeout(step, Math.min(left, 20));
+    };
+    step();
+  });
+}
+
+async function assign(t, v, sc) {
+  if (t.k !== 'id') throw new Error('invalid assignment target');
+  const c = sc.find(t.n);
+  if (!c) throw new Error("'" + t.n + "' was not declared in this scope");
+  c.v = coerce(c.t, v);
+}
+
+async function ev(e, sc) {
+  switch (e.k) {
+    case 'lit': return e.v;
+    case 'id': {
+      const c = sc.find(e.n);
+      if (c) return c.v;
+      if (Object.prototype.hasOwnProperty.call(CONSTS, e.n)) return CONSTS[e.n];
+      throw new Error("'" + e.n + "' was not declared in this scope");
+    }
+    case 'un': {
+      const v = await ev(e.a, sc);
+      if (e.op === '-') return -v;
+      if (e.op === '+') return +v;
+      if (e.op === '!') return truthy(v) ? 0 : 1;
+      return ~v;
+    }
+    case 'bin': {
+      if (e.op === '&&') return (truthy(await ev(e.l, sc)) && truthy(await ev(e.r, sc))) ? 1 : 0;
+      if (e.op === '||') return (truthy(await ev(e.l, sc)) || truthy(await ev(e.r, sc))) ? 1 : 0;
+      const a = await ev(e.l, sc), b = await ev(e.r, sc);
+      return binop(e.op, a, b, stype(e.l, sc) === 'float' || stype(e.r, sc) === 'float');
+    }
+    case 'cond': return truthy(await ev(e.c, sc)) ? await ev(e.a, sc) : await ev(e.b, sc);
+    case 'cast': return coerce(e.ty, await ev(e.a, sc));
+    case 'asg': {
+      const v = await ev(e.r, sc);
+      let nv = v;
+      if (e.op !== '=') {
+        const cur = await ev(e.target, sc);
+        nv = binop(e.op.slice(0, -1), cur, v, stype(e.target, sc) === 'float' || stype(e.r, sc) === 'float');
+      }
+      await assign(e.target, nv, sc);
+      return nv;
+    }
+    case 'upd': {
+      const cur = await ev(e.a, sc);
+      const nv = e.op === '++' ? cur + 1 : cur - 1;
+      await assign(e.a, nv, sc);
+      return e.pre ? nv : cur;
+    }
+    case 'mem': {
+      const o = await ev(e.o, sc);
+      if (o == null) throw new Error('member access on an empty value');
+      return o[e.p];
+    }
+    case 'call': return callExpr(e, sc);
+  }
+  throw new Error('unsupported expression ' + e.k);
+}
+
+async function callExpr(e, sc) {
+  if (e.f.k === 'id') {
+    const name = e.f.n;
+    const fn = FUNCS[name];
+    if (fn) {
+      const args = [];
+      for (let i = 0; i < e.args.length; i++) {
+        const a = e.args[i], pr = fn.params[i];
+        if (pr && pr.ref && a.k === 'id') args.push({ cell: sc.find(a.n) });
+        else args.push({ v: await ev(a, sc) });
+      }
+      return invoke(fn, args);
+    }
+    if (Object.prototype.hasOwnProperty.call(BUILTIN, name)) {
+      const vals = [];
+      for (const a of e.args) vals.push(await ev(a, sc));
+      const r = BUILTIN[name](...vals);
+      return r instanceof Promise ? await r : r;
+    }
+    throw new Error("'" + name + "' was not declared in this scope");
+  }
+  if (e.f.k === 'mem') {
+    const obj = await ev(e.f.o, sc);
+    const m = obj ? obj[e.f.p] : undefined;
+    if (typeof m !== 'function') throw new Error('no function named ' + e.f.p);
+    const vals = [];
+    for (const a of e.args) vals.push(await ev(a, sc));
+    if ((e.f.p === 'print' || e.f.p === 'println') && e.args.length) PM = modeOf(stype(e.args[0], sc));
+    else PM = 'str';
+    const r = m.apply(obj, vals);
+    return r instanceof Promise ? await r : r;
+  }
+  throw new Error('unsupported call');
+}
+
+async function invoke(fn, args) {
+  const sc = new Scope(GLOBAL);
+  fn.params.forEach((p, i) => {
+    const a = args[i];
+    if (a && a.cell) sc.v.set(p.n, a.cell);
+    else sc.v.set(p.n, { v: coerce(p.t, a ? a.v : 0), t: p.t });
+  });
+  try {
+    await exec(fn.body, sc);
+  } catch (x) {
+    if (x instanceof Ret) return fn.ret === 'void' ? undefined : coerce(fn.ret, x.v);
+    throw x;
+  }
+  return undefined;
+}
+
+async function exec(s, sc) {
+  switch (s.k) {
+    case 'block': {
+      const b = new Scope(sc);
+      for (const x of s.b) await exec(x, b);
+      return;
+    }
+    case 'nop': return;
+    case 'var': {
+      for (const d of s.ds) {
+        let v;
+        if (d.init) v = await ev(d.init, sc);
+        else if (d.ctor) {
+          const a = [];
+          for (const x of d.ctor) a.push(await ev(x, sc));
+          v = BUILTIN_T.has(d.type) ? (a.length ? a[0] : 0) : makeObj(d.type, a);
+        } else v = BUILTIN_T.has(d.type) ? 0 : makeObj(d.type, []);
+        sc.v.set(d.name, { v: coerce(d.type, v), t: d.type });
+      }
+      return;
+    }
+    case 'expr': await ev(s.e, sc); return;
+    case 'if':
+      if (truthy(await ev(s.c, sc))) await exec(s.a, sc);
+      else if (s.e) await exec(s.e, sc);
+      return;
+    case 'while':
+      while (truthy(await ev(s.c, sc))) {
+        await spin();
+        try { await exec(s.b, sc); }
+        catch (x) { if (x === BRK) break; if (x !== CNT) throw x; }
+      }
+      return;
+    case 'do':
+      do {
+        await spin();
+        try { await exec(s.b, sc); }
+        catch (x) { if (x === BRK) break; if (x !== CNT) throw x; }
+      } while (truthy(await ev(s.c, sc)));
+      return;
+    case 'for': {
+      const f = new Scope(sc);
+      if (s.i) await exec(s.i, f);
+      while (s.c === null || truthy(await ev(s.c, f))) {
+        await spin();
+        try { await exec(s.b, f); }
+        catch (x) { if (x === BRK) break; if (x !== CNT) throw x; }
+        if (s.u) await ev(s.u, f);
+      }
+      return;
+    }
+    case 'ret': throw new Ret(s.e ? await ev(s.e, sc) : 0);
+    case 'brk': throw BRK;
+    case 'cnt': throw CNT;
+    case 'switch': {
+      const v = await ev(s.e, sc);
+      let idx = -1;
+      for (let i = 0; i < s.cases.length && idx < 0; i++) {
+        const c = s.cases[i];
+        if (c.t && (await ev(c.t, sc)) === v) idx = i;
+      }
+      if (idx < 0) idx = s.cases.findIndex(c => !c.t);
+      if (idx < 0) return;
+      const b = new Scope(sc);
+      try {
+        for (let i = idx; i < s.cases.length; i++) for (const x of s.cases[i].b) await exec(x, b);
+      } catch (x) { if (x === BRK) return; throw x; }
+      return;
+    }
+  }
+  throw new Error('unsupported statement ' + s.k);
+}
+
+// ============================================================
+// BUILT-IN ARDUINO FUNCTIONS
+// ============================================================
+let AC = null;
+function beepTone(f, ms) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.frequency.value = f; g.gain.value = 0.04;
+    o.connect(g); g.connect(AC.destination);
+    o.start(); o.stop(AC.currentTime + (ms || 100) / 1000);
+  } catch (e) {}
+}
+const BUILTIN = {
+  pinMode: (p, m) => setMode(p, m),
+  digitalWrite: (p, v) => digitalWritePin(p, v),
+  digitalRead: p => digitalReadPin(p),
+  analogWrite: (p, v) => analogWritePin(p, v),
+  analogRead: p => analogReadPin(p),
+  delay: ms => sleepMs(ms),
+  delayMicroseconds: () => {},
+  millis: () => Date.now() - T0,
+  micros: () => (Date.now() - T0) * 1000,
+  map: (x, a, b, c, d) => (b === a ? c : Math.trunc((x - a) * (d - c) / (b - a) + c)),
+  constrain: (x, a, b) => Math.min(Math.max(x, a), b),
+  min: Math.min, max: Math.max, abs: Math.abs, pow: Math.pow, sqrt: Math.sqrt,
+  sq: x => x * x,
+  sin: Math.sin, cos: Math.cos, tan: Math.tan, atan: Math.atan, atan2: Math.atan2, asin: Math.asin, acos: Math.acos,
+  radians: d => d * Math.PI / 180, degrees: r => r * 180 / Math.PI,
+  random: (a, b) => {
+    if (b === undefined) return a === undefined ? Math.floor(Math.random() * 32767) : Math.floor(Math.random() * a);
+    return Math.floor(a + Math.random() * (b - a));
+  },
+  randomSeed: () => {},
+  tone: (p, f, d) => beepTone(f, d),
+  noTone: () => {},
+  bitRead: (x, b) => (x >> b) & 1,
+  bitSet: (x, b) => x | (1 << b),
+  bitClear: (x, b) => x & ~(1 << b),
+  highByte: x => (x >> 8) & 255,
+  lowByte: x => x & 255,
+  F: s => s
+};
+// PART 4 END
+// ============================================================
+// RUN CONTROL
+// ============================================================
+function setRunBtn(on) {
+  const b = $('run');
+  b.textContent = on ? 'Stop' : 'Run';
+  b.className = 'btn ' + (on ? 'stop' : 'run');
+}
+function resetRuntime() {
+  board.mode.fill('in');
+  board.out.fill(0);
+  touch.down = false; touch.csWas = 1; touch.clk = 0; touch.bits = 0; touch.cmd = 0; touch.resp = 0;
+  TFTINST = null;
+  TG.fillStyle = '#000';
+  TG.fillRect(0, 0, 240, 320);
+  for (const p of parts) if (p.type === 'sv') p.angle = 90;
+  serialText = '';
+  $('ser').textContent = '';
+  spinN = 0;
+  markDirty();
+}
+async function runSketch() {
+  if (running) return;
+  let ast;
+  try { ast = parseProgram($('code').value); }
+  catch (e) { serialOut('[compile error] ' + e.message + '\n'); return; }
+  running = true; STOP = false;
+  setRunBtn(true);
+  resetRuntime();
+  GLOBAL = new Scope(null);
+  FUNCS = {};
+  T0 = Date.now();
+  try {
+    for (const it of ast) if (it.k === 'fn') FUNCS[it.name] = it;
+    for (const it of ast) if (it.k !== 'fn') await exec(it, GLOBAL);
+    if (FUNCS.setup) await invoke(FUNCS.setup, []);
+    while (!STOP) {
+      if (FUNCS.loop) await invoke(FUNCS.loop, []);
+      else await sleepMs(20);
+      await yieldNow();
+    }
+  } catch (e) {
+    if (e !== STOPSIG) serialOut('\n[runtime error] ' + (e && e.message ? e.message : e) + '\n');
+  }
+  running = false;
+  setRunBtn(false);
+  markDirty();
+}
+function stopSketch() { if (running) STOP = true; }
+
+// ============================================================
+// RENDERING
+// ============================================================
+function pinPos(a) {
+  const p = PART(a[0]);
+  if (!p) return null;
+  const pin = DEFS[p.type].pins.find(x => x.id === a[1]);
+  return pin ? { x: p.x + pin.x, y: p.y + pin.y } : null;
+}
+function wirePath(A, B) {
+  const my = (A.y + B.y) / 2;
+  return 'M' + A.x + ',' + A.y + ' C' + A.x + ',' + my + ' ' + B.x + ',' + my + ' ' + B.x + ',' + B.y;
+}
+function amBody() {
+  const onboard = board.mode[13] === 'out' && board.out[13] >= 128;
+  return '<rect width="800" height="280" rx="10" fill="#0e7490" stroke="#064e5f" stroke-width="2"/>' +
+    '<text x="400" y="150" text-anchor="middle" font-size="24" font-weight="700" fill="#ecfeff" font-family="monospace">ARDUINO MEGA 2560</text>' +
+    '<rect x="330" y="172" width="140" height="64" rx="3" fill="#111827"/>' +
+    '<text x="400" y="208" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="monospace">ATmega2560</text>' +
+    '<circle cx="390" cy="50" r="7" fill="' + (onboard ? '#fde047' : '#374151') + '" stroke="#111"/>' +
+    '<text x="404" y="54" font-size="10" fill="#ecfeff" font-family="monospace">L (D13)</text>';
+}
+function ledBody(p) {
+  const c = LEDC[p.color] || LEDC.red, lit = ledLit(p);
+  return (lit ? '<circle cx="24" cy="24" r="30" fill="' + c[0] + '" opacity="0.25"/>' : '') +
+    '<circle cx="24" cy="24" r="18" fill="' + (lit ? c[0] : c[1]) + '" stroke="#111" stroke-width="1.5"/>' +
+    '<rect x="10" y="44" width="4" height="50" fill="#9ca3af"/><rect x="34" y="44" width="4" height="50" fill="#9ca3af"/>';
+}
+function jyBody(p) {
+  const sx = (p.vx - 512) / 512 * 30, sy = (p.vy - 512) / 512 * 30;
+  return '<rect width="130" height="150" rx="6" fill="#1e3a8a" stroke="#0b1d4f" stroke-width="1.5"/>' +
+    '<circle cx="65" cy="70" r="48" fill="#172554" stroke="#0b1d4f"/>' +
+    '<circle cx="' + (65 + sx) + '" cy="' + (70 + sy) + '" r="18" fill="' + (p.pressed ? '#dc2626' : '#111') + '" stroke="#000"/>' +
+    '<text x="65" y="14" text-anchor="middle" font-size="10" fill="#e0e7ff" font-family="monospace">JOYSTICK</text>';
+}
+function svBody(p) {
+  const a = p.angle * Math.PI / 180, ex = 55 - Math.cos(a) * 42, ey = 62 - Math.sin(a) * 42;
+  return '<rect width="110" height="80" rx="4" fill="#1e3a5f" stroke="#0a1f3a"/>' +
+    '<line x1="55" y1="62" x2="' + ex + '" y2="' + ey + '" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>' +
+    '<circle cx="55" cy="62" r="6" fill="#9ca3af" stroke="#111"/>' +
+    '<text x="55" y="20" text-anchor="middle" font-size="10" fill="#e0f2fe" font-family="monospace">SG90 ' + Math.round(p.angle) + ' deg</text>';
+}
+function tftBody() {
+  return '<rect width="220" height="290" rx="6" fill="#0f172a" stroke="#000" stroke-width="1.5"/>' +
+    '<rect x="25" y="22" width="170" height="227" fill="#000"/>' +
+    '<text x="110" y="268" text-anchor="middle" font-size="10" fill="#cbd5e1" font-family="monospace">ST7789 240x320 + XPT2046</text>';
+}
+function bodyOf(p) {
+  switch (p.type) {
+    case 'am': return amBody();
+    case 'led': return ledBody(p);
+    case 'jy': return jyBody(p);
+    case 'sv': return svBody(p);
+    case 'tft': return tftBody();
+  }
+  return '';
+}
+function pinCol(p, pin) {
+  const key = ukey(p.id, pin.id);
+  if (pend === key) return '#fbbf24';
+  if (p.type === 'am') {
+    if (pin.id.startsWith('gnd')) return '#111827';
+    if (pin.id === '5v' || pin.id === '3v3') return '#dc2626';
+    if (pin.id[0] === 'd') {
+      const n = +pin.id.slice(1);
+      if (board.mode[n] === 'out') return board.out[n] >= 128 ? '#4ade80' : '#64748b';
+    }
+  }
+  return '#d4d4d8';
+}
+function pinSvg(p, pin) {
+  const key = ukey(p.id, pin.id);
+  let tx, ty, an;
+  if (pin.s === 't') { tx = pin.x; ty = pin.y - 7; an = 'middle'; }
+  else if (pin.s === 'b') { tx = pin.x; ty = pin.y + 13; an = 'middle'; }
+  else if (pin.s === 'l') { tx = pin.x - 7; ty = pin.y + 3; an = 'end'; }
+  else { tx = pin.x + 7; ty = pin.y + 3; an = 'start'; }
+  const lab = p.type === 'am' ? '#e2e8f0' : '#334155';
+  return '<g data-pin="' + key + '" transform="translate(' + pin.x + ',' + pin.y + ')" style="cursor:crosshair">' +
+    '<circle r="9" fill="transparent"/><circle r="4.5" fill="' + pinCol(p, pin) + '" stroke="#111" stroke-width="0.8"/></g>' +
+    '<text x="' + tx + '" y="' + ty + '" text-anchor="' + an + '" font-size="9" font-family="monospace" fill="' + lab + '" pointer-events="none">' + pin.label + '</text>';
+}
+function renderBoard() {
+  let g = '';
+  for (const w of wires) {
+    const A = pinPos(w.a), B = pinPos(w.b);
+    if (!A || !B) continue;
+    const d = wirePath(A, B), sel = selWire === w.id;
+    g += '<path d="' + d + '" fill="none" stroke="' + w.color + '" stroke-width="' + (sel ? 6 : 3.5) + '" stroke-linecap="round" pointer-events="none"/>';
+    g += '<path d="' + d + '" fill="none" stroke="transparent" stroke-width="12" data-wire="' + w.id + '" style="cursor:pointer"/>';
+  }
+  if (pend) {
+    const A = pinPos(pend.split('|'));
+    if (A) g += '<path d="' + wirePath(A, mouse) + '" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="6 4" pointer-events="none"/>';
+  }
+  for (const p of parts) {
+    const def = DEFS[p.type];
+    g += '<g transform="translate(' + p.x + ',' + p.y + ')">';
+    if (selPart === p.id) g += '<rect x="-6" y="-6" width="' + (def.w + 12) + '" height="' + (def.h + 12) + '" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 4"/>';
+    g += '<g data-part="' + p.id + '" style="cursor:move"><rect width="' + def.w + '" height="' + def.h + '" fill="transparent"/>' + bodyOf(p) + '</g>';
+    for (const pin of def.pins) g += pinSvg(p, pin);
+    g += '</g>';
+  }
+  svg.innerHTML = g;
+  renderTft();
+}
+function renderTft() {
+  const t = tftPart();
+  if (!t) { tftc.style.display = 'none'; tftm.style.display = 'none'; return; }
+  const L = t.x + 25, T = t.y + 22;
+  const ok = !!TFTINST && tftWired();
+  tftc.style.display = 'block';
+  tftc.style.left = L + 'px';
+  tftc.style.top = T + 'px';
+  tftc.style.width = '170px';
+  tftc.style.height = '227px';
+  tftc.style.visibility = ok ? 'visible' : 'hidden';
+  tftm.style.display = ok ? 'none' : 'flex';
+  tftm.style.left = L + 'px';
+  tftm.style.top = T + 'px';
+  tftm.style.width = '170px';
+  tftm.style.height = '227px';
+  tftm.textContent = !TFTINST ? 'Sketch has not created the display yet' : 'Check wiring: CS, DC, RST must match the sketch, and VCC and GND must be wired';
+}
+function frame() {
+  if (dirty) { dirty = false; renderBoard(); }
+  requestAnimationFrame(frame);
+}
+
+// ============================================================
+// MOUSE / TOUCH / KEYBOARD
+// ============================================================
+function svgPt(e) {
+  const pt = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+function joyMove(e) {
+  const p = joy.p, pt = svgPt(e);
+  const dx = pt.x - (p.x + 65), dy = pt.y - (p.y + 70);
+  p.vx = clamp(Math.round(512 + dx * 8), 0, 1023);
+  p.vy = clamp(Math.round(512 + dy * 8), 0, 1023);
+  markDirty();
+}
+function pinClick(key) {
+  if (!pend) pend = key;
+  else if (pend === key) pend = null;
+  else {
+    const a = pend.split('|'), b = key.split('|');
+    const isGnd = s => s.includes('gnd');
+    const isPow = s => s.includes('5v') || s.includes('3v3');
+    let color = wireColor;
+    if (isGnd(pend) || isGnd(key)) color = '#111827';
+    else if (isPow(pend) || isPow(key)) color = '#dc2626';
+    wires.push({ id: 'w' + (++WID), a, b, color });
+    pend = null;
+    buildNets();
+  }
+  markDirty();
+}
+function deleteSelected() {
+  if (selWire) {
+    wires = wires.filter(w => w.id !== selWire);
+    selWire = null;
+    buildNets();
+  } else if (selPart) {
+    const p = PART(selPart);
+    if (p && p.type !== 'am') {
+      parts = parts.filter(x => x.id !== selPart);
+      wires = wires.filter(w => w.a[0] !== selPart && w.b[0] !== selPart);
+      selPart = null;
+      buildNets();
+    }
+  }
+  markDirty();
+}
+function addPart(type, color) {
+  const n = parts.length;
+  const id = nextId(type);
+  parts.push(mkPart({ id, type, x: 80 + (n % 3) * 280, y: 380 + Math.floor(n / 3) * 180, color }));
+  buildNets();
+  markDirty();
+}
+
+svg.addEventListener('pointerdown', e => {
+  const pinEl = e.target.closest('[data-pin]');
+  if (pinEl) { e.preventDefault(); pinClick(pinEl.dataset.pin); return; }
+  const wEl = e.target.closest('[data-wire]');
+  if (wEl) { selWire = wEl.dataset.wire; selPart = null; markDirty(); return; }
+  const pEl = e.target.closest('[data-part]');
+  if (pEl) {
+    const p = PART(pEl.dataset.part);
+    selPart = p.id; selWire = null;
+    const pt = svgPt(e);
+    const dist = Math.hypot(pt.x - (p.x + 65), pt.y - (p.y + 70));
+    if (p.type === 'jy' && dist <= 48) {
+      joy = { p };
+      p.pressed = dist <= 18;
+      joyMove(e);
+      buildNets();
+    } else {
+      drag = { id: p.id, dx: pt.x - p.x, dy: pt.y - p.y };
+    }
+    markDirty();
+    return;
+  }
+  pend = null; selPart = null; selWire = null;
+  markDirty();
+});
+window.addEventListener('pointermove', e => {
+  if (drag) {
+    const pt = svgPt(e), p = PART(drag.id);
+    if (p) { p.x = Math.round(pt.x - drag.dx); p.y = Math.round(pt.y - drag.dy); markDirty(); }
+  }
+  if (joy) joyMove(e);
+  if (pend) { mouse = svgPt(e); markDirty(); }
+});
+window.addEventListener('pointerup', () => {
+  drag = null;
+  if (joy) {
+    joy.p.pressed = false;
+    joy.p.vx = 512; joy.p.vy = 512;
+    joy = null;
+    buildNets();
+    markDirty();
+  }
+});
+
+function setTouchFrom(e) {
+  const r = tftc.getBoundingClientRect();
+  touch.x = clamp(Math.floor((e.clientX - r.left) / r.width * 240), 0, 239);
+  touch.y = clamp(Math.floor((e.clientY - r.top) / r.height * 320), 0, 319);
+}
+tftc.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  tftc.setPointerCapture(e.pointerId);
+  touch.down = true;
+  setTouchFrom(e);
+  markDirty();
+});
+tftc.addEventListener('pointermove', e => { if (touch.down) setTouchFrom(e); });
+const endTouch = () => { touch.down = false; markDirty(); };
+tftc.addEventListener('pointerup', endTouch);
+tftc.addEventListener('pointercancel', endTouch);
+
+document.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('textarea,input')) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
+  if (e.key === 'Escape') { pend = null; markDirty(); }
+});
+
+// ============================================================
+// EDITOR
+// ============================================================
+const code = $('code'), hl = $('hl'), gut = $('gut');
+const HL_RE = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(#[^\n]*)|\b(\d+(?:\.\d+)?|0x[0-9a-fA-F]+)\b|\b([A-Za-z_]\w*)\b/g;
+const escH = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function highlight(src) {
+  let out = '', last = 0;
+  src.replace(HL_RE, (m, com, str, chr, pre, num, id, off) => {
+    out += escH(src.slice(last, off));
+    last = off + m.length;
+    let cls = '';
+    if (com) cls = 'cm';
+    else if (str || chr) cls = 'st';
+    else if (pre) cls = 'pp';
+    else if (num) cls = 'nm';
+    else if (KW.has(id)) cls = 'kw';
+    else if (TYPES.has(id)) cls = 'ty';
+    else if (Object.prototype.hasOwnProperty.call(CONSTS, id)) cls = 'cn';
+    else if (Object.prototype.hasOwnProperty.call(BUILTIN, id)) cls = 'fn';
+    out += cls ? '<span class="' + cls + '">' + escH(m) + '</span>' : escH(m);
+    return m;
+  });
+  return out + escH(src.slice(last)) + '\n';
+}
+function updateEditor() {
+  hl.innerHTML = highlight(code.value);
+  const n = code.value.split('\n').length;
+  let s = '';
+  for (let i = 1; i <= n; i++) s += i + '\n';
+  gut.textContent = s;
+}
+code.addEventListener('input', updateEditor);
+code.addEventListener('scroll', () => { hl.scrollTop = code.scrollTop; hl.scrollLeft = code.scrollLeft; gut.scrollTop = code.scrollTop; });
+code.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    code.setRangeText('  ', code.selectionStart, code.selectionEnd, 'end');
+    updateEditor();
+  }
+});
+
+// ============================================================
+// LOAD / SAVE / MENUS / TOOLBAR
+// ============================================================
+function loadExample(i) {
+  stopSketch();
+  const ex = EXAMPLES[i];
+  code.value = ex.code;
+  updateEditor();
+  parts = [boardPart()].concat(ex.parts.map(mkPart));
+  wires = ex.wires.map(([a, b]) => ({ id: 'w' + (++WID), a: a.split('|'), b: b.split('|'), color: wireWireColor(a, b) }));
+  selPart = null; selWire = null; pend = null;
+  resetRuntime();
+  buildNets();
+  markDirty();
+}
+function wireWireColor(a, b) {
+  if (a.includes('gnd') || b.includes('gnd')) return '#111827';
+  if (a.includes('5v') || b.includes('5v') || a.includes('3v3') || b.includes('3v3')) return '#dc2626';
+  return WIRE_COLORS[0];
+}
+
+const PALETTE = [['Red LED', 'led', 'red'], ['Green LED', 'led', 'green'], ['Yellow LED', 'led', 'yellow'],
+  ['Analog joystick', 'jy', null], ['Servo (SG90)', 'sv', null], ['ST7789 TFT + touch', 'tft', null]];
+
+function closeMenus() { document.querySelectorAll('.pop').forEach(p => p.classList.remove('open')); }
+document.addEventListener('click', e => { if (!e.target.closest('.menu')) closeMenus(); });
+
+EXAMPLES.forEach((ex, i) => {
+  const b = document.createElement('button');
+  b.innerHTML = '<div class="t">' + escH(ex.title) + '</div><div class="d">' + escH(ex.desc) + '</div>';
+  b.onclick = () => { closeMenus(); loadExample(i); };
+  $('exList').appendChild(b);
+});
+PALETTE.forEach(([label, type, color]) => {
+  const b = document.createElement('button');
+  b.innerHTML = '<div class="t">' + label + '</div>';
+  b.onclick = () => { closeMenus(); addPart(type, color); };
+  $('addList').appendChild(b);
+});
+$('exBtn').onclick = () => { const o = $('exPop').classList.contains('open'); closeMenus(); if (!o) $('exPop').classList.add('open'); };
+$('addBtn').onclick = () => { const o = $('addPop').classList.contains('open'); closeMenus(); if (!o) $('addPop').classList.add('open'); };
+
+WIRE_COLORS.forEach(c => {
+  const s = document.createElement('span');
+  s.className = 'sw' + (c === wireColor ? ' on' : '');
+  s.style.background = c;
+  s.onclick = () => {
+    wireColor = c;
+    document.querySelectorAll('#swatches .sw').forEach(x => x.classList.remove('on'));
+    s.classList.add('on');
+  };
+  s.dataset.c = c;
+  $('swatches').appendChild(s);
+});
+
+$('run').onclick = () => { if (running) stopSketch(); else runSketch(); };
+$('reset').onclick = () => { stopSketch(); resetRuntime(); };
+$('del').onclick = () => deleteSelected();
+$('save').onclick = () => {
+  const data = JSON.stringify({ code: code.value, parts: parts.map(p => ({ id: p.id, type: p.type, x: p.x, y: p.y, color: p.color })), wires });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+  a.download = 'arduino-mega-sketch.json';
+  a.click();
+};
+$('load').onclick = () => $('file').click();
+$('file').onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      stopSketch();
+      code.value = d.code;
+      updateEditor();
+      parts = d.parts.map(mkPart);
+      wires = d.wires;
+      resetRuntime();
+      buildNets();
+      markDirty();
+    } catch (err) { serialOut('[load error] ' + err.message + '\n'); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+};
+
+// Startup
+loadExample(0);
+frame();
+// PART 5 END
+</script>
+</body>
+</html>
