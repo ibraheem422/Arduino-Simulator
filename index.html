@@ -62,6 +62,13 @@ body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#eef2f7;
     <div class="pop" id="addPop"><div class="ph">Add a part to the breadboard</div><div id="addList"></div></div>
   </div>
   <button class="btn" id="del">Delete selected</button>
+  <button class="btn" id="undoBtn" disabled>Undo</button>
+  <button class="btn" id="redoBtn" disabled>Redo</button>
+  <button class="btn" id="wiringBtn">Wiring...</button>
+  <div class="sep"></div>
+  <input id="cardIn" maxlength="8" placeholder="card UID" style="width:110px;font:13px Consolas,monospace;padding:5px;border:1px solid #cbd5e1;border-radius:6px">
+  <button class="btn" id="cardBtn">Place card</button>
+  <button class="btn" id="cardOff">Remove card</button>
   <div class="sep"></div>
   <button class="btn" id="save">Save</button>
   <button class="btn" id="load">Load</button>
@@ -80,14 +87,30 @@ body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#eef2f7;
   <div id="right">
     <div id="bbh"><span>Breadboard</span><span>Drag a part by its body. Click a pin, then another pin, to wire. Click the TFT screen to touch it.</span></div>
     <div id="bb">
-      <div class="tip">Delete or Backspace removes the selected part or wire. Esc cancels a wire.</div>
       <div id="stage">
         <svg id="svg" width="1400" height="1000"></svg>
         <canvas id="tftc" width="240" height="320"></canvas>
         <div id="tftm"></div>
       </div>
     </div>
-    <div id="sp"><div id="sph"><span>SERIAL MONITOR</span><span>9600 baud</span></div><div id="ser"></div></div>
+    <div id="sp"><div id="sph"><span>SERIAL MONITOR</span><span>9600 baud</span></div><div style="display:flex;gap:6px;padding:6px;background:#0d1117;border-bottom:1px solid #1e293b"><input id="serIn" placeholder="Type a line and press Enter (sent to Serial.read)" style="flex:1;background:#000;color:#34d399;border:1px solid #334155;padding:5px;font:13px Consolas,monospace"><button class="btn" id="serSend">Send</button></div><div id="ser"></div></div>
+  </div>
+</div>
+
+<div id="wmodal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:200;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:10px;width:560px;max-width:92vw;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,.25)">
+    <div style="font-weight:700;font-size:15px;margin-bottom:6px">Write wiring</div>
+    <div style="font-size:12px;color:#475569;line-height:1.5;margin-bottom:8px">
+      One wire per line, in the form <code>part.pin - part.pin</code>. Example: <code>am.d13 - led1.a</code>.<br>
+      Lines starting with <code>#</code> are ignored. Part names and pins are listed below the box.
+    </div>
+    <textarea id="wtext" spellcheck="false" style="width:100%;height:240px;font:13px/18px Consolas,Menlo,monospace;border:1px solid #cbd5e1;border-radius:6px;padding:8px;resize:vertical"></textarea>
+    <div id="whelp" style="font:11px/16px Consolas,Menlo,monospace;color:#475569;margin-top:8px;max-height:110px;overflow:auto"></div>
+    <div id="wmsg" style="color:#dc2626;font-size:12px;margin-top:6px;white-space:pre-wrap"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button class="btn" id="wcancel">Cancel</button>
+      <button class="btn run" id="wapply">Apply wiring</button>
+    </div>
   </div>
 </div>
 
@@ -122,6 +145,14 @@ const DEFS = {
     { id: 'dc', label: 'DC', x: 122, y: 290, s: 'b' }, { id: 'rst', label: 'RST', x: 149, y: 290, s: 'b' },
     { id: 'mosi', label: 'MOSI', x: 176, y: 290, s: 't' }, { id: 'sck', label: 'SCK', x: 203, y: 290, s: 'b' }] }
 };
+DEFS.rtc = { name: 'DS3231 RTC module', w: 110, h: 90, pins: [
+  { id: 'vcc', label: 'VCC', x: 20, y: 90, s: 'b' }, { id: 'gnd', label: 'GND', x: 45, y: 90, s: 'b' },
+  { id: 'sda', label: 'SDA', x: 70, y: 90, s: 'b' }, { id: 'scl', label: 'SCL', x: 95, y: 90, s: 'b' }] };
+DEFS.mfrc = { name: 'MFRC522 RFID reader', w: 130, h: 110, pins: [
+  { id: 'sda', label: 'SDA', x: 14, y: 110, s: 'b' }, { id: 'sck', label: 'SCK', x: 30, y: 110, s: 'b' },
+  { id: 'mosi', label: 'MOSI', x: 46, y: 110, s: 'b' }, { id: 'miso', label: 'MISO', x: 62, y: 110, s: 'b' },
+  { id: 'irq', label: 'IRQ', x: 78, y: 110, s: 'b' }, { id: 'gnd', label: 'GND', x: 94, y: 110, s: 'b' },
+  { id: 'rst', label: 'RST', x: 110, y: 110, s: 'b' }, { id: '3v3', label: '3V3', x: 126, y: 110, s: 'b' }] };
 DEFS.am.pins = (() => {
   const p = [];
   for (let i = 0; i <= 25; i++) p.push({ id: 'd' + i, label: '' + i, x: 30 + i * 27, y: 0, s: 't' });
@@ -527,6 +558,7 @@ const css = c => {
 };
 function fmt(v, m) {
   if (typeof v === 'string') return v;
+  if (Array.isArray(v)) return toStr(v);   // char arrays print as text
   if (m === 'char') return String.fromCharCode(v);
   if (m === 'float') return Number.isFinite(v) ? Number(v).toFixed(2) : String(v);
   return String(Math.trunc(Number(v) || 0));
@@ -564,6 +596,7 @@ class TFTObj {
   setTextColor(c) { this.col = c; }
   setTextSize(s) { this.sz = Math.max(1, s); }
   setRotation() {}
+  invertDisplay() {}
   width() { return 240; }
   height() { return 320; }
   print(v, base) { this.write(fmtBase(v, base, PM)); }
@@ -584,6 +617,105 @@ class TFTObj {
 // ============================================================
 // SERVO, SERIAL
 // ============================================================
+// ---- Net helpers used by the new parts ----
+function netHasArd(pid, pin, n) {
+  const s = summ[rootOf(pid, pin)];
+  return !!(s && s.ard.includes(n));
+}
+function mfrcPartFor(obj) {
+  return parts.find(p => p.type === 'mfrc' && netHasArd(p.id, 'sda', obj.ss)) || null;
+}
+
+// ---- DS3231 real-time clock on the I2C bus (address 0x68) ----
+const RTC = { offset: 0 };          // ms added to the host clock
+const rtcNow = () => new Date(Date.now() + RTC.offset);
+const bcd = n => ((Math.floor(n / 10) << 4) | (n % 10));
+const unbcd = v => ((v >> 4) * 10 + (v & 15));
+function rtcConnected() {
+  const r = parts.find(p => p.type === 'rtc');
+  if (!r) return false;
+  const v = summ[rootOf(r.id, 'vcc')], g = summ[rootOf(r.id, 'gnd')];
+  return netHasArd(r.id, 'sda', 20) && netHasArd(r.id, 'scl', 21) && !!(v && v.v5) && !!(g && g.gnd);
+}
+function rtcRegs() {
+  const d = rtcNow();
+  const regs = new Array(19).fill(0);
+  regs[0] = bcd(d.getSeconds()); regs[1] = bcd(d.getMinutes()); regs[2] = bcd(d.getHours());
+  regs[3] = 1; regs[4] = bcd(d.getDate()); regs[5] = bcd(d.getMonth() + 1); regs[6] = bcd(d.getFullYear() % 100);
+  regs[0x11] = 24; regs[0x12] = 0x40;   // 24.25 C
+  return regs;
+}
+function rtcWrite(start, data) {
+  const d = rtcNow();
+  let sec = d.getSeconds(), min = d.getMinutes(), hr = d.getHours();
+  let day = d.getDate(), mon = d.getMonth() + 1, yr = d.getFullYear() % 100;
+  data.forEach((v, i) => {
+    const reg = start + i;
+    if (reg === 0) sec = unbcd(v & 0x7f);
+    else if (reg === 1) min = unbcd(v);
+    else if (reg === 2) hr = unbcd(v & 0x3f);
+    else if (reg === 4) day = unbcd(v);
+    else if (reg === 5) mon = unbcd(v & 0x1f);
+    else if (reg === 6) yr = unbcd(v);
+  });
+  const t = new Date(d);
+  t.setFullYear(2000 + yr, mon - 1, day);
+  t.setHours(hr, min, sec, 0);
+  RTC.offset = t.getTime() - Date.now();
+}
+class WireObj {
+  constructor() { this.addr = 0; this.buf = []; this.rbuf = []; this.ptr = 0; }
+  begin() {}
+  setClock() {}
+  beginTransmission(a) { this.addr = a; this.buf = []; }
+  write(v) {
+    if (typeof v === 'number') this.buf.push(v & 255);
+    else for (const c of String(v)) this.buf.push(c.charCodeAt(0) & 255);
+    return 1;
+  }
+  endTransmission() {
+    if (!(this.addr === 0x68 && rtcConnected())) return 2;
+    if (this.buf.length) {
+      this.ptr = this.buf[0];
+      if (this.buf.length > 1) rtcWrite(this.buf[0], this.buf.slice(1));
+    }
+    return 0;
+  }
+  requestFrom(a, n) {
+    this.rbuf = [];
+    if (!(a === 0x68 && rtcConnected())) return 0;
+    const regs = rtcRegs();
+    for (let i = 0; i < n; i++) this.rbuf.push(regs[this.ptr + i] ?? 0);
+    this.ptr += n;
+    return n;
+  }
+  read() { return this.rbuf.length ? this.rbuf.shift() : 0; }
+  available() { return this.rbuf.length; }
+}
+
+// ---- MFRC522 RFID reader (SPI, SS pin set in the constructor) ----
+class MFRC522Obj {
+  constructor(ss, rst) {
+    this.ss = ss; this.rst = rst;
+    this.uid = { uidByte: [0, 0, 0, 0], size: 4 };
+    this.TxControlReg = 0x14;
+    this.regs = {};
+  }
+  PCD_Init() {}
+  PCD_Reset() {}
+  PCD_ReadRegister(r) { return this.regs[r] || 0; }
+  PCD_WriteRegister(r, v) { this.regs[r] = v & 255; }
+  PICC_IsNewCardPresent() { const p = mfrcPartFor(this); return !!(p && p.card && !p.halted); }
+  PICC_ReadCardSerial() {
+    const p = mfrcPartFor(this);
+    if (!(p && p.card)) return false;
+    this.uid.uidByte = p.card.match(/../g).map(h => parseInt(h, 16));
+    return true;
+  }
+  PICC_HaltA() { const p = mfrcPartFor(this); if (p) p.halted = true; }
+  PCD_StopCrypto1() {}
+}
+
 class ServoObj {
   constructor() { this.pin = null; this.angle = 90; }
   attach(p) { this.pin = p; return 1; }
@@ -599,6 +731,7 @@ class ServoObj {
 }
 
 let serialText = '';
+let serialRx = '';      // bytes waiting for Serial.read()
 function serialOut(s) {
   serialText += s;
   if (serialText.length > 20000) serialText = serialText.slice(-20000);
@@ -609,12 +742,29 @@ function serialOut(s) {
 class SerialObj {
   begin() {}
   end() {}
-  available() { return 0; }
-  read() { return -1; }
+  available() { return serialRx.length; }
+  read() { if (!serialRx.length) return -1; const c = serialRx.charCodeAt(0); serialRx = serialRx.slice(1); return c; }
   flush() {}
+  readBytesUntil(term, buf, len) {
+    let n = 0;
+    while (serialRx.length && n < len) {
+      const c = serialRx.charCodeAt(0);
+      serialRx = serialRx.slice(1);
+      if (c === term) break;
+      buf[n++] = c;
+    }
+    return n;
+  }
   print(v, base) { serialOut(fmtBase(v, base, PM)); }
   println(v, base) { serialOut((v === undefined ? '' : fmtBase(v, base, PM)) + '\n'); }
   write(v) { serialOut(typeof v === 'number' ? String.fromCharCode(v & 255) : String(v)); }
+}
+
+class EepromObj {
+  constructor() { this.data = new Array(1024).fill(255); }
+  read(a) { return this.data[a & 1023]; }
+  update(a, v) { this.data[a & 1023] = v & 255; }
+  write(a, v) { this.update(a, v); }
 }
 
 const CONSTS = {
@@ -623,7 +773,12 @@ const CONSTS = {
   ST77XX_BLACK: 0x0000, ST77XX_WHITE: 0xffff, ST77XX_RED: 0xf800, ST77XX_GREEN: 0x07e0, ST77XX_BLUE: 0x001f,
   ST77XX_CYAN: 0x07ff, ST77XX_MAGENTA: 0xf81f, ST77XX_YELLOW: 0xffe0, ST77XX_ORANGE: 0xfd20,
   BLACK: 0x0000, WHITE: 0xffff, RED: 0xf800, GREEN: 0x07e0, BLUE: 0x001f, CYAN: 0x07ff, MAGENTA: 0xf81f, YELLOW: 0xffe0,
-  Serial: new SerialObj()
+  Serial: new SerialObj(),
+  EEPROM: new EepromObj(),
+  Wire: new WireObj(),
+  SPI: { begin() {}, end() {}, beginTransaction() {}, endTransaction() {}, transfer(v) { return v; },
+         setClockDivider() {}, setDataMode() {}, setBitOrder() {} },
+  MSBFIRST: 1, LSBFIRST: 0, SPI_MODE0: 0, SPI_MODE1: 1, SPI_CLOCK_DIV2: 2
 };
 for (let i = 0; i < 16; i++) CONSTS['A' + i] = 54 + i;
 // PART 2 END
@@ -728,6 +883,7 @@ function parseProgram(src) {
   const toks = lex(src, {});
   toks.push({ t: 'eof', v: '', line: toks.length ? toks[toks.length - 1].line : 1 });
   let p = 0;
+  const enumTypes = new Set();
   const peek = (k = 0) => toks[Math.min(p + k, toks.length - 1)];
   const next = () => toks[p++];
   const perr = m => new Error('line ' + peek().line + ': ' + m);
@@ -737,25 +893,47 @@ function parseProgram(src) {
   const expect = v => { if (!accept(v)) throw perr("expected '" + v + "' but found '" + (peek().v || 'end of file') + "'"); };
   const typeTok = (k = 0) => { const t = peek(k); return t.t === 'kw' && TYPES.has(t.v); };
   const isDeclStart = () => typeTok(0) || (peek().t === 'id' && peek(1).t === 'id');
+  function isCastAhead() {
+    let k = 1, sawType = false;
+    for (;;) {
+      const t = peek(k);
+      if (t.t === 'kw' && TYPES.has(t.v)) { sawType = true; k++; continue; }
+      if (t.t === 'op' && t.v === '*') { k++; continue; }
+      break;
+    }
+    return sawType && isOp(')', k);
+  }
 
   function parseType() {
     const parts = [];
     while (isKw('const') || isKw('static') || isKw('volatile')) next();
     while (isKw('unsigned') || isKw('signed') || isKw('long') || isKw('short')) parts.push(next().v);
     if (typeTok(0)) parts.push(next().v);
-    else if (peek().t === 'id' && parts.length === 0) parts.push(next().v);
+    else if (peek().t === 'id' && parts.length === 0) {
+      parts.push(next().v);
+      while (isOp('::')) { next(); parts.push(next().v); }
+    }
     else if (parts.length === 0) throw perr("expected a type but found '" + peek().v + "'");
     while (isKw('const')) next();
-    return normType(parts);
+    const nt = normType(parts);
+    return enumTypes.has(nt) ? 'int' : nt;
   }
 
   function parseDecl(ty, nameTok) {
     const ds = [];
     let name = nameTok.v;
     for (;;) {
-      if (isOp('[')) throw perr('arrays are not supported in this simulator (' + name + ')');
-      const d = { name, type: ty, init: null, ctor: null };
-      if (accept('=')) d.init = parseAssign();
+      const d = { name, type: ty, init: null, ctor: null, dims: null, lst: null };
+      if (isOp('[')) {
+        d.dims = [];
+        while (accept('[')) { d.dims.push(isOp(']') ? null : parseAssign()); expect(']'); }
+      }
+      if (accept('=')) {
+        if (accept('{')) {
+          d.lst = [];
+          if (!accept('}')) { do { if (isOp('}')) break; d.lst.push(parseAssign()); } while (accept(',')); expect('}'); }
+        } else d.init = parseAssign();
+      }
       else if (accept('(')) {
         d.ctor = [];
         if (!accept(')')) { do { d.ctor.push(parseAssign()); } while (accept(',')); expect(')'); }
@@ -765,15 +943,18 @@ function parseProgram(src) {
       break;
     }
     expect(';');
-    return { k: 'var', ds };
+    return { k: 'var', ds, st: false };
   }
 
   function parseDeclStmt() {
+    const isStatic = isKw('static');
     const ty = parseType();
     accept('*');
     const nameTok = next();
     if (nameTok.t !== 'id') throw perr('expected a variable name');
-    return parseDecl(ty, nameTok);
+    const r = parseDecl(ty, nameTok);
+    r.st = isStatic;
+    return r;
   }
 
   function parseFunc(ret, nameTok) {
@@ -818,6 +999,12 @@ function parseProgram(src) {
   }
 
   function parseStmt() {
+    const line = peek().line;
+    const node = parseStmtInner();
+    if (node && typeof node === 'object') node.line = line;
+    return node;
+  }
+  function parseStmtInner() {
     const t = peek();
     if (isOp('{')) return parseBlock();
     if (accept(';')) return { k: 'nop' };
@@ -904,9 +1091,11 @@ function parseProgram(src) {
       if (t.v === '-' || t.v === '+' || t.v === '!' || t.v === '~') { next(); return { k: 'un', op: t.v, a: parseUnary() }; }
       if (t.v === '++' || t.v === '--') { next(); return { k: 'upd', op: t.v, pre: true, a: parseUnary() }; }
       if (t.v === '&' || t.v === '*') { next(); return parseUnary(); }
-      if (t.v === '(' && typeTok(1) && isOp(')', 2)) {
-        next(); const ty = parseType(); expect(')');
-        return { k: 'cast', ty, a: parseUnary() };
+      if (t.v === '(' && isCastAhead()) {
+        next(); const ty0 = parseType(); let ptr = false;
+        while (accept('*')) ptr = true;
+        expect(')');
+        return { k: 'cast', ty: ptr ? 'ptr' : ty0, a: parseUnary() };
       }
     }
     return parsePostfix();
@@ -919,6 +1108,9 @@ function parseProgram(src) {
         const args = [];
         if (!accept(')')) { do { args.push(parseAssign()); } while (accept(',')); expect(')'); }
         e = { k: 'call', f: e, args };
+      } else if (accept('[')) {
+        const ix = parseExpr(); expect(']');
+        e = { k: 'idx', o: e, i: ix };
       } else if (accept('.')) {
         e = { k: 'mem', o: e, p: next().v };
       } else if (isOp('++') || isOp('--')) {
@@ -945,6 +1137,25 @@ function parseProgram(src) {
   const items = [];
   while (peek().t !== 'eof') {
     if (accept(';')) continue;
+    if (peek().t === 'id' && peek().v === 'enum') {
+      next();
+      if (peek().t === 'id') { enumTypes.add(peek().v); next(); }
+      expect('{');
+      let val = 0;
+      while (!accept('}')) {
+        const nm = next();
+        if (nm.t !== 'id') throw perr('expected an enum constant');
+        if (accept('=')) {
+          const ex = parseAssign();
+          if (ex.k !== 'lit') throw perr('enum values must be numbers');
+          val = ex.v;
+        }
+        CONSTS[nm.v] = val++;
+        accept(',');
+      }
+      accept(';');
+      continue;
+    }
     const ty = parseType();
     accept('*');
     const nameTok = next();
@@ -982,6 +1193,7 @@ class Ret { constructor(v) { this.v = v; } }
 const BRK = { brk: true }, CNT = { cnt: true }, STOPSIG = { stop: true };
 let GLOBAL = new Scope(null), FUNCS = {}, PM = 'int';
 let STOP = false, running = false, T0 = Date.now(), spinN = 0;
+let CURLINE = 0;          // line of the statement being run
 
 const truthy = v => (typeof v === 'number' ? v !== 0 : !!v);
 function coerce(t, v) {
@@ -1007,6 +1219,7 @@ function stype(e, sc) {
     case 'un': return e.op === '!' ? 'int' : stype(e.a, sc);
     case 'cond': return stype(e.a, sc);
     case 'asg': return stype(e.target, sc);
+    case 'idx': { const c = e.o.k === 'id' ? sc.find(e.o.n) : null; return c ? c.t : 'int'; }
     case 'upd': return stype(e.a, sc);
     case 'call':
       if (e.f.k === 'id') {
@@ -1045,6 +1258,8 @@ function binop(op, a, b, fl) {
 function makeObj(t, a) {
   if (t === 'Servo') return new ServoObj();
   if (t === 'Adafruit_ST7789') return new TFTObj(a[0], a[1], a[2]);
+  if (t === 'MFRC522') return new MFRC522Obj(a[0], a[1]);
+  if (t === 'MIFARE_Key') return { keyByte: [0, 0, 0, 0, 0, 0] };
   throw new Error("unknown type '" + t + "' (this simulator supports Servo and Adafruit_ST7789)");
 }
 
@@ -1064,6 +1279,13 @@ function sleepMs(ms) {
 }
 
 async function assign(t, v, sc) {
+  if (t.k === 'idx') {
+    const c = await arrCell(t.o, sc);
+    const i = Math.trunc(Number(await ev(t.i, sc)));
+    if (i < 0 || i >= c.v.length) throw new Error('array index ' + i + ' out of bounds (size ' + c.v.length + ')');
+    c.v[i] = coerce(c.t, v);
+    return;
+  }
   if (t.k !== 'id') throw new Error('invalid assignment target');
   const c = sc.find(t.n);
   if (!c) throw new Error("'" + t.n + "' was not declared in this scope");
@@ -1115,6 +1337,12 @@ async function ev(e, sc) {
       if (o == null) throw new Error('member access on an empty value');
       return o[e.p];
     }
+    case 'idx': {
+      const c = await arrCell(e.o, sc);
+      const i = Math.trunc(Number(await ev(e.i, sc)));
+      if (i < 0 || i >= c.v.length) throw new Error('array index ' + i + ' out of bounds (size ' + c.v.length + ')');
+      return c.v[i];
+    }
     case 'call': return callExpr(e, sc);
   }
   throw new Error('unsupported expression ' + e.k);
@@ -1160,6 +1388,7 @@ async function invoke(fn, args) {
   fn.params.forEach((p, i) => {
     const a = args[i];
     if (a && a.cell) sc.v.set(p.n, a.cell);
+    else if (a && Array.isArray(a.v)) sc.v.set(p.n, { v: a.v, t: p.t, arr: true });   // arrays pass by reference, like C pointers
     else sc.v.set(p.n, { v: coerce(p.t, a ? a.v : 0), t: p.t });
   });
   try {
@@ -1171,7 +1400,32 @@ async function invoke(fn, args) {
   return undefined;
 }
 
+async function arrCell(node, sc) {
+  if (node.k !== 'id') {
+    const v = await ev(node, sc);
+    if (!Array.isArray(v)) throw new Error('indexing needs an array');
+    return { v, t: 'int', arr: true };
+  }
+  const c = sc.find(node.n);
+  if (!c || !Array.isArray(c.v)) throw new Error("'" + node.n + "' is not an array");
+  return c;
+}
+async function makeArrayCell(d, sc) {
+  let n = null;
+  if (d.dims[0]) n = Math.trunc(Number(await ev(d.dims[0], sc)));
+  let vals = null;
+  if (d.lst) { vals = []; for (const x of d.lst) vals.push(await ev(x, sc)); }
+  else if (d.init && d.init.k === 'lit' && d.init.s) { vals = Array.from(d.init.v).map(c => c.charCodeAt(0)); vals.push(0); }
+  else if (d.init) throw new Error('unsupported array initializer for ' + d.name);
+  if (n === null) n = vals ? vals.length : 0;
+  if (vals && vals.length > n) throw new Error('too many initializers for ' + d.name);
+  const arr = new Array(n).fill(0);
+  if (vals) for (let i = 0; i < vals.length; i++) arr[i] = coerce(d.type, vals[i]);
+  return { v: arr, t: d.type, arr: true };
+}
+
 async function exec(s, sc) {
+  if (s.line) CURLINE = s.line;
   switch (s.k) {
     case 'block': {
       const b = new Scope(sc);
@@ -1181,6 +1435,13 @@ async function exec(s, sc) {
     case 'nop': return;
     case 'var': {
       for (const d of s.ds) {
+        if (s.st && d.cell) { sc.v.set(d.name, d.cell); continue; }
+        if (d.dims) {
+          const acell = await makeArrayCell(d, sc);
+          if (s.st) d.cell = acell;
+          sc.v.set(d.name, acell);
+          continue;
+        }
         let v;
         if (d.init) v = await ev(d.init, sc);
         else if (d.ctor) {
@@ -1188,7 +1449,9 @@ async function exec(s, sc) {
           for (const x of d.ctor) a.push(await ev(x, sc));
           v = BUILTIN_T.has(d.type) ? (a.length ? a[0] : 0) : makeObj(d.type, a);
         } else v = BUILTIN_T.has(d.type) ? 0 : makeObj(d.type, []);
-        sc.v.set(d.name, { v: coerce(d.type, v), t: d.type });
+        const cell = { v: coerce(d.type, v), t: d.type };
+        if (s.st) d.cell = cell;
+        sc.v.set(d.name, cell);
       }
       return;
     }
@@ -1257,6 +1520,10 @@ function beepTone(f, ms) {
     o.start(); o.stop(AC.currentTime + (ms || 100) / 1000);
   } catch (e) {}
 }
+function toStr(x) {
+  if (Array.isArray(x)) return x.map(c => String.fromCharCode(c)).join('').split('\0')[0];
+  return String(x);
+}
 const BUILTIN = {
   pinMode: (p, m) => setMode(p, m),
   digitalWrite: (p, v) => digitalWritePin(p, v),
@@ -1285,7 +1552,10 @@ const BUILTIN = {
   bitClear: (x, b) => x & ~(1 << b),
   highByte: x => (x >> 8) & 255,
   lowByte: x => x & 255,
-  F: s => s
+  F: s => s,
+  SPISettings: () => ({}),
+  strlen_P: s => toStr(s).length,
+  strcmp: (a, b) => { const x = toStr(a), y = toStr(b); return x < y ? -1 : (x > y ? 1 : 0); }
 };
 // PART 4 END
 // ============================================================
@@ -1305,6 +1575,7 @@ function resetRuntime() {
   TG.fillRect(0, 0, 240, 320);
   for (const p of parts) if (p.type === 'sv') p.angle = 90;
   serialText = '';
+  serialRx = '';
   $('ser').textContent = '';
   spinN = 0;
   markDirty();
@@ -1314,7 +1585,7 @@ async function runSketch() {
   let ast;
   try { ast = parseProgram($('code').value); }
   catch (e) { serialOut('[compile error] ' + e.message + '\n'); return; }
-  running = true; STOP = false;
+  running = true; STOP = false; CURLINE = 0;
   setRunBtn(true);
   resetRuntime();
   GLOBAL = new Scope(null);
@@ -1330,7 +1601,7 @@ async function runSketch() {
       await yieldNow();
     }
   } catch (e) {
-    if (e !== STOPSIG) serialOut('\n[runtime error] ' + (e && e.message ? e.message : e) + '\n');
+    if (e !== STOPSIG) serialOut('\n[runtime error, line ' + CURLINE + '] ' + (e && e.message ? e.message : e) + '\n');
   }
   running = false;
   setRunBtn(false);
@@ -1385,6 +1656,24 @@ function tftBody() {
     '<rect x="25" y="22" width="170" height="227" fill="#000"/>' +
     '<text x="110" y="268" text-anchor="middle" font-size="10" fill="#cbd5e1" font-family="monospace">ST7789 240x320 + XPT2046</text>';
 }
+function rtcBody() {
+  return '<rect width="110" height="90" rx="6" fill="#1d4ed8" stroke="#1e3a8a" stroke-width="1.5"/>' +
+    '<rect x="10" y="10" width="90" height="34" rx="3" fill="#0f172a"/>' +
+    '<text x="55" y="24" text-anchor="middle" font-size="10" fill="#93c5fd" font-family="monospace">DS3231</text>' +
+    '<text x="55" y="37" text-anchor="middle" font-size="8" fill="#bfdbfe" font-family="monospace">RTC MODULE</text>' +
+    '<circle cx="80" cy="64" r="10" fill="#d1d5db" stroke="#111"/>' +
+    '<text x="80" y="67" text-anchor="middle" font-size="7" fill="#111" font-family="monospace">CR</text>';
+}
+function mfrcBody(p) {
+  const card = p.card
+    ? '<rect x="28" y="20" width="74" height="36" rx="4" fill="#f59e0b" stroke="#78350f"/>' +
+      '<text x="65" y="33" text-anchor="middle" font-size="8" fill="#111" font-family="monospace">CARD</text>' +
+      '<text x="65" y="46" text-anchor="middle" font-size="8" fill="#111" font-family="monospace">' + p.card.match(/../g).join(':') + '</text>'
+    : '';
+  return '<rect width="130" height="110" rx="6" fill="#065f46" stroke="#022c22" stroke-width="1.5"/>' +
+    '<rect x="14" y="14" width="102" height="66" rx="3" fill="#d1d5db" stroke="#111"/>' + card +
+    '<text x="65" y="92" text-anchor="middle" font-size="9" fill="#ecfdf5" font-family="monospace">MFRC522</text>';
+}
 function bodyOf(p) {
   switch (p.type) {
     case 'am': return amBody();
@@ -1392,6 +1681,8 @@ function bodyOf(p) {
     case 'jy': return jyBody(p);
     case 'sv': return svBody(p);
     case 'tft': return tftBody();
+    case 'rtc': return rtcBody();
+    case 'mfrc': return mfrcBody(p);
   }
   return '';
 }
@@ -1492,13 +1783,17 @@ function pinClick(key) {
     let color = wireColor;
     if (isGnd(pend) || isGnd(key)) color = '#111827';
     else if (isPow(pend) || isPow(key)) color = '#dc2626';
+    pushHistory();
     wires.push({ id: 'w' + (++WID), a, b, color });
     pend = null;
     buildNets();
+    autoArrange();
   }
   markDirty();
 }
 function deleteSelected() {
+  const delPart = selPart ? PART(selPart) : null;
+  if (selWire || (delPart && delPart.type !== 'am')) pushHistory();
   if (selWire) {
     wires = wires.filter(w => w.id !== selWire);
     selWire = null;
@@ -1515,10 +1810,12 @@ function deleteSelected() {
   markDirty();
 }
 function addPart(type, color) {
+  pushHistory();
   const n = parts.length;
   const id = nextId(type);
   parts.push(mkPart({ id, type, x: 80 + (n % 3) * 280, y: 380 + Math.floor(n / 3) * 180, color }));
   buildNets();
+  autoArrange();
   markDirty();
 }
 
@@ -1539,7 +1836,7 @@ svg.addEventListener('pointerdown', e => {
       joyMove(e);
       buildNets();
     } else {
-      drag = { id: p.id, dx: pt.x - p.x, dy: pt.y - p.y };
+      drag = { id: p.id, dx: pt.x - p.x, dy: pt.y - p.y, before: snapshotStr(), moved: false };
     }
     markDirty();
     return;
@@ -1550,12 +1847,13 @@ svg.addEventListener('pointerdown', e => {
 window.addEventListener('pointermove', e => {
   if (drag) {
     const pt = svgPt(e), p = PART(drag.id);
-    if (p) { p.x = Math.round(pt.x - drag.dx); p.y = Math.round(pt.y - drag.dy); markDirty(); }
+    if (p) { p.x = Math.round(pt.x - drag.dx); p.y = Math.round(pt.y - drag.dy); drag.moved = true; markDirty(); }
   }
   if (joy) joyMove(e);
   if (pend) { mouse = svgPt(e); markDirty(); }
 });
 window.addEventListener('pointerup', () => {
+  if (drag && drag.moved) { undoStack.push(drag.before); if (undoStack.length > 100) undoStack.shift(); redoStack = []; updateUndoButtons(); }
   drag = null;
   if (joy) {
     joy.p.pressed = false;
@@ -1585,6 +1883,9 @@ tftc.addEventListener('pointercancel', endTouch);
 
 document.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('textarea,input')) return;
+  const ctrl = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+  if (ctrl && !e.shiftKey && k === 'z') { e.preventDefault(); undo(); return; }
+  if (ctrl && (k === 'y' || (e.shiftKey && k === 'z'))) { e.preventDefault(); redo(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
   if (e.key === 'Escape') { pend = null; markDirty(); }
 });
@@ -1636,6 +1937,7 @@ code.addEventListener('keydown', e => {
 // ============================================================
 function loadExample(i) {
   stopSketch();
+  pushHistory();
   const ex = EXAMPLES[i];
   code.value = ex.code;
   updateEditor();
@@ -1653,7 +1955,7 @@ function wireWireColor(a, b) {
 }
 
 const PALETTE = [['Red LED', 'led', 'red'], ['Green LED', 'led', 'green'], ['Yellow LED', 'led', 'yellow'],
-  ['Analog joystick', 'jy', null], ['Servo (SG90)', 'sv', null], ['ST7789 TFT + touch', 'tft', null]];
+  ['Analog joystick', 'jy', null], ['Servo (SG90)', 'sv', null], ['ST7789 TFT + touch', 'tft', null], ['DS3231 RTC module', 'rtc', null], ['RFID reader (MFRC522)', 'mfrc', null]];
 
 function closeMenus() { document.querySelectorAll('.pop').forEach(p => p.classList.remove('open')); }
 document.addEventListener('click', e => { if (!e.target.closest('.menu')) closeMenus(); });
@@ -1705,6 +2007,7 @@ $('file').onchange = e => {
     try {
       const d = JSON.parse(r.result);
       stopSketch();
+      pushHistory();
       code.value = d.code;
       updateEditor();
       parts = d.parts.map(mkPart);
@@ -1718,8 +2021,202 @@ $('file').onchange = e => {
   e.target.value = '';
 };
 
+// ============================================================
+// AUTO-ARRANGE: place parts in rows under the Arduino, nearest to the pins they use
+// ============================================================
+const POWER_PIN = /gnd|5v|3v3|vin/;
+function autoArrange() {
+  const am = PART('am');
+  if (!am) return;
+  const info = parts.filter(p => p.type !== 'am').map((p, idx) => {
+    const xs = [];
+    for (const w of wires) {
+      let other = null;
+      if (w.a[0] === p.id && w.b[0] === am.id) other = w.b;
+      else if (w.b[0] === p.id && w.a[0] === am.id) other = w.a;
+      if (other && !POWER_PIN.test(other[1])) {
+        const pos = pinPos(other);
+        if (pos) xs.push(pos.x);
+      }
+    }
+    return { p, idx, target: xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : Infinity };
+  });
+  info.sort((a, b) => (a.target - b.target) || (a.idx - b.idx));
+  const LEFT = 40, ROW_Y = am.y + DEFS.am.h + 60, MAX_X = 1300;
+  let x = LEFT, y = ROW_Y, rowH = 0;
+  for (const k of info) {
+    const { w, h } = DEFS[k.p.type];
+    let want = isFinite(k.target) ? Math.round(k.target - w / 2) : x;
+    if (want < x) want = x;
+    if (want + w > MAX_X) { y += rowH + 60; rowH = 0; x = LEFT; want = LEFT; }
+    k.p.x = want;
+    k.p.y = y;
+    x = want + w + 40;
+    rowH = Math.max(rowH, h);
+  }
+  markDirty();
+}
+
+// ============================================================
+// WIRING BY TEXT
+// ============================================================
+function wiringToText() {
+  return wires.map(w => w.a.join('.') + ' - ' + w.b.join('.')).join('\n');
+}
+const LED_COLORS = ['red', 'yellow', 'green'];
+// A part named led1, jy1, sv1 or tft1 is created automatically when wiring refers to it
+function virtualPart(pid, pending) {
+  const m = pid.match(/^(led|jy|sv|tft|rtc|mfrc|rfid)(\d*)$/);
+  if (!m) return null;
+  const n = +m[2] || 1;
+  const type = m[1] === 'rfid' ? 'mfrc' : m[1];
+  const color = type === 'led' ? (LED_COLORS[n - 1] || 'red') : 'red';
+  if (!pending[pid]) pending[pid] = { id: pid, type, color };
+  return pending[pid];
+}
+function resolvePin(pid, pin, pending) {
+  const p = PART(pid) || virtualPart(pid, pending);
+  if (!p) return { err: 'unknown part "' + pid + '" (names must be led1, jy1, sv1, tft1, rtc1, mfrc1, or am)' };
+  let pn = pin;
+  if (p.type === 'am' && pn === 'gnd') pn = 'gnd1';
+  if (!DEFS[p.type].pins.some(x => x.id === pn)) return { err: '"' + pid + '" has no pin "' + pin + '"' };
+  return { pid, pin: pn };
+}
+function parseWiring(text) {
+  const out = [], errs = [], pending = {};
+  text.split('\n').forEach((raw, i) => {
+    const line = raw.replace(/#.*$/, '').trim();
+    if (!line) return;
+    const toks = line.split(/[\s,-]+/).filter(Boolean);
+    if (toks.length !== 2) { errs.push('line ' + (i + 1) + ': write two pins, e.g. am.d13 - led1.a'); return; }
+    const ends = [];
+    for (const t of toks) {
+      const m = t.toLowerCase().split(/[.|:]/);
+      if (m.length !== 2) { errs.push('line ' + (i + 1) + ': "' + t + '" should look like part.pin'); return; }
+      const r = resolvePin(m[0], m[1], pending);
+      if (r.err) { errs.push('line ' + (i + 1) + ': ' + r.err); return; }
+      ends.push([r.pid, r.pin]);
+    }
+    const a = ends[0], b = ends[1];
+    out.push({ id: 'w' + (++WID), a, b, color: wireWireColor(a.join('|'), b.join('|')) });
+  });
+  return { wires: out, errs, pending };
+}
+// Adds the parts that the wiring text named but that are not on the breadboard yet
+function addPendingParts(pending) {
+  let n = parts.length;
+  for (const v of Object.values(pending)) {
+    const x = 80 + (n % 3) * 280, y = 380 + Math.floor(n / 3) * 180;
+    parts.push(mkPart({ id: v.id, type: v.type, x, y, color: v.color }));
+    n++;
+  }
+}
+function showWiringHelp() {
+  $('whelp').textContent = parts.map(p => p.id + ': ' + (p.type === 'am'
+    ? 'd0-d53, a0-a15, gnd1, gnd2, gnd3, 5v, 3v3, vin'
+    : DEFS[p.type].pins.map(x => x.id).join(', '))).join('\n');
+}
+$('wiringBtn').onclick = () => {
+  closeMenus();
+  $('wtext').value = wiringToText() + (wires.length ? '\n' : '');
+  $('wmsg').textContent = '';
+  showWiringHelp();
+  $('wmodal').style.display = 'flex';
+  $('wtext').focus();
+};
+$('wcancel').onclick = () => { $('wmodal').style.display = 'none'; };
+$('wapply').onclick = () => {
+  const r = parseWiring($('wtext').value);
+  if (r.errs.length) { $('wmsg').textContent = r.errs.join('\n'); return; }
+  pushHistory();
+  addPendingParts(r.pending);
+  wires = r.wires;
+  selWire = null;
+  selPart = null;
+  buildNets();
+  autoArrange();
+  markDirty();
+  $('wmodal').style.display = 'none';
+};
+
+
+// ============================================================
+// RFID CARD CONTROLS
+// ============================================================
+function placeCard() {
+  const hex = $('cardIn').value.replace(/[^0-9a-f]/gi, '').toUpperCase();
+  if (hex.length !== 8) { serialOut('[card] enter 8 hex digits, e.g. 11223344\n'); return; }
+  const readers = parts.filter(p => p.type === 'mfrc');
+  if (!readers.length) { serialOut('[card] add an RFID reader (MFRC522) first\n'); return; }
+  readers.forEach(p => { p.card = hex; p.halted = false; });
+  markDirty();
+}
+$('cardBtn').onclick = placeCard;
+$('cardIn').addEventListener('keydown', e => { if (e.key === 'Enter') placeCard(); });
+$('cardOff').onclick = () => {
+  parts.forEach(p => { if (p.type === 'mfrc') { p.card = ''; p.halted = false; } });
+  markDirty();
+};
+
+// ============================================================
+// SERIAL INPUT
+// ============================================================
+function sendSerialLine() {
+  const el = $('serIn');
+  const text = el.value;
+  el.value = '';
+  serialRx += text + '\n';
+  serialOut('> ' + text + '\n');
+}
+$('serSend').onclick = sendSerialLine;
+$('serIn').addEventListener('keydown', e => { if (e.key === 'Enter') sendSerialLine(); });
+
+// ============================================================
+// UNDO / REDO (parts and wires)
+// ============================================================
+let undoStack = [], redoStack = [];
+function snapshotStr() {
+  return JSON.stringify({
+    parts: parts.map(p => ({ id: p.id, type: p.type, x: p.x, y: p.y, color: p.color, card: p.card })),
+    wires
+  });
+}
+function restoreStr(str) {
+  const d = JSON.parse(str);
+  parts = d.parts.map(p => { const m = mkPart(p); if (p.card !== undefined) m.card = p.card; return m; });
+  wires = d.wires;
+  selPart = null; selWire = null; pend = null;
+  buildNets();
+  markDirty();
+}
+function pushHistory() {
+  undoStack.push(snapshotStr());
+  if (undoStack.length > 100) undoStack.shift();
+  redoStack = [];
+  updateUndoButtons();
+}
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(snapshotStr());
+  restoreStr(undoStack.pop());
+  updateUndoButtons();
+}
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(snapshotStr());
+  restoreStr(redoStack.pop());
+  updateUndoButtons();
+}
+function updateUndoButtons() {
+  $('undoBtn').disabled = !undoStack.length;
+  $('redoBtn').disabled = !redoStack.length;
+}
+$('undoBtn').onclick = undo;
+$('redoBtn').onclick = redo;
+
 // Startup
 loadExample(0);
+undoStack = []; redoStack = []; updateUndoButtons();
 frame();
 // PART 5 END
 </script>
